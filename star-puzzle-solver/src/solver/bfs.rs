@@ -1,54 +1,56 @@
+use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 use star_puzzle::board::Board;
 use crate::solver::{Solver, SolverResult};
 
 #[derive(PartialEq, Debug)]
-pub struct DfsResult {
+pub struct BfsResult {
     time: Duration,
     states_explored: usize,
     found_solution: bool
 }
 
-impl SolverResult for DfsResult {
+impl SolverResult for BfsResult {
     fn print_results(&self) {
-        println!("DFS Solver Results");
+        println!("BFS Solver Results:");
         println!("    Time: {:?}", self.time);
         println!("    States Explored: {}", self.states_explored);
         println!("    Found Solution: {}", self.found_solution);
-    }   
+    }
 }
 
 #[derive(PartialEq, Debug)]
-pub struct DfsSolver {
+pub struct BfsSolver {
     print: bool
 }
 
-impl Solver for DfsSolver {
+impl Solver for BfsSolver {
     fn solve(&self, board: Board) -> Box<dyn SolverResult> {
         let now = Instant::now();
-        let dsf_results = self.dfs_solve(board);
-        
-        Box::new(DfsResult {
+        let bsf_results = self.bfs_solve(board);
+
+        Box::new(BfsResult {
             time: now.elapsed(),
-            states_explored: dsf_results.0,
-            found_solution: dsf_results.1
+            states_explored: bsf_results.0,
+            found_solution: bsf_results.1
         })
     }
 }
 
-impl DfsSolver {
-    pub fn new(print: bool) -> DfsSolver {
-        DfsSolver { print }
+impl BfsSolver {
+    pub fn new(print: bool) -> BfsSolver {
+        BfsSolver { print }
     }
 
-    fn dfs_solve(&self, board: Board) -> (usize, bool) {
+    fn bfs_solve(&self, board: Board) -> (usize, bool) {
         let mut states_explored = 0;
-        let mut stack: Vec<Board> = vec!();
-        stack.push(board);
+        let mut queue: VecDeque<Board> = VecDeque::new();
+        queue.push_back(board);
 
-        while !stack.is_empty() {
-            let current_board = stack.pop().unwrap();
+        while !queue.is_empty() {
+            let current_board = queue.pop_front().unwrap();
             states_explored += 1;
+
             if self.print {
                 println!("--------");
                 current_board.print();
@@ -64,13 +66,13 @@ impl DfsSolver {
                     if current_board.is_empty(x, y) {
                         let mut new_board = current_board.clone();
                         if new_board.place_star(x, y).is_ok() {
-                            stack.push(new_board);
+                            queue.push_back(new_board);
                         }
                     }
                 }
             }
         }
-        
+
         (states_explored, false)
     }
 }
