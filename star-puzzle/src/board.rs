@@ -1,17 +1,27 @@
-use std::collections::{HashMap, HashSet};
 use colored::{Color, Colorize};
+use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
+use std::iter::Map;
 
-const COLORS: [Color; 10] = [Color::Red, Color::Green, Color::Yellow, Color::Blue, Color::Magenta, Color::White, Color::BrightRed, Color::BrightGreen, Color::BrightBlue, Color::BrightCyan];
+const COLORS: [Color; 10] = [
+    Color::Red,
+    Color::Green,
+    Color::Yellow,
+    Color::Blue,
+    Color::Magenta,
+    Color::White,
+    Color::BrightRed,
+    Color::BrightGreen,
+    Color::BrightBlue,
+    Color::BrightCyan,
+];
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Board {
     color_sections: Vec<ColorSection>,
-    star_count: usize,
     max_star_count: usize,
-    state: State,
     pub size: usize,
-    row_counts: Vec<usize>, // TODO: should these move to state? Mutable data is also stored in color_sections now ...
-    col_counts: Vec<usize>
+    pub state: State,
 }
 
 impl Board {
@@ -45,63 +55,58 @@ impl Board {
         let color_sections = color_section_map
             .values()
             .map(|positions| ColorSection {
-                positions: positions.clone(),
-                star_count: 0,
+                positions: positions.clone()
             })
             .collect();
 
         Ok(Board {
             color_sections,
-            star_count: 0,
             max_star_count,
-            state: State::new(),
+            state: State::new(board_size),
             size: board_size,
-            row_counts: vec![0; board_size],
-            col_counts: vec![0; board_size]
         })
     }
 
     pub fn is_solved(&self) -> bool {
-        let colors_valid = self
-            .color_sections
+        let colors_valid = self.state.star_counts
             .iter()
-            .all(|color_section| color_section.star_count == self.max_star_count);
+            .all(|(_, count)| *count == self.max_star_count);
 
         if !colors_valid {
             return false;
         }
 
-        !self.row_counts.iter().any(|x| *x != self.max_star_count)
-            && !self.col_counts.iter().any(|x| *x != self.max_star_count)
+        !self.state.row_counts.iter().any(|x| *x != self.max_star_count)
+            && !self.state.col_counts.iter().any(|x| *x != self.max_star_count)
     }
-    
+
     pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
         if self.in_range(x, y) {
             self.state.star_placements.push((x, y));
 
             // Row / Col counts are not correct
-            if self.row_counts[y] + 1 > self.max_star_count {
-                return Err("Too many stars in this column".to_string())
+            if self.state.row_counts[y] + 1 > self.max_star_count {
+                return Err("Too many stars in this column".to_string());
             }
 
-            if self.col_counts[x] + 1 > self.max_star_count {
-                return Err("Too many stars in this row".to_string())
+            if self.state.col_counts[x] + 1 > self.max_star_count {
+                return Err("Too many stars in this row".to_string());
             }
 
-            self.row_counts[y] += 1;
-            self.col_counts[x] += 1;
-            
-            for color_section in self.color_sections.iter_mut() {
+            self.state.row_counts[y] += 1;
+            self.state.col_counts[x] += 1;
+
+            for (i, color_section) in self.color_sections.iter_mut().enumerate() {
                 if color_section.positions.contains(&(x, y)) {
-                    if color_section.star_count + 1 > self.max_star_count {
-                        return Err("Too many stars in this color section".to_string())
+                    if *self.state.star_counts.entry(i).or_insert(0) + 1 > self.max_star_count {
+                        return Err("Too many stars in this color section".to_string());
                     }
-                    
-                    color_section.star_count += 1;
+
+                    *self.state.star_counts.entry(i).or_insert(0) += 1;
                 }
             }
 
-            let mut surrounding: Vec<(usize, usize)> = vec!();
+            let mut surrounding: Vec<(usize, usize)> = vec![];
 
             for i in -1..2 {
                 for j in -1..2 {
@@ -117,14 +122,14 @@ impl Board {
             }
 
             if surrounding.iter().any(|pos| self.has_star(pos.0, pos.1)) {
-                return Err("Cannot place star next to another star".to_string())
+                return Err("Cannot place star next to another star".to_string());
             }
 
             surrounding.iter().for_each(|(x, y)| {
                 self.place_dot(*x, *y);
             });
 
-            return Ok(())
+            return Ok(());
         }
 
         Err("Invalid position".to_string())
@@ -181,21 +186,47 @@ impl Board {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ColorSection {
-    positions: HashSet<(usize, usize)>,
-    star_count: usize,
+    positions: HashSet<(usize, usize)>
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct State {
     star_placements: Vec<(usize, usize)>,
     dot_placements: Vec<(usize, usize)>,
+    row_counts: Vec<usize>,
+    col_counts: Vec<usize>,
+    star_counts: HashMap<usize, usize>
+}
+
+impl PartialEq for State {
+    fn eq(&self, other: &Self) -> bool {
+        self.star_placements == other.star_placements
+            && self.dot_placements == other.dot_placements
+    }
+}
+
+impl Eq for State {
+
+}
+
+impl Hash for State {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.star_placements.hash(state);
+        self.dot_placements.hash(state);
+    }
 }
 
 impl State {
-    pub fn new() -> State {
+    pub fn new(board_size: usize) -> State {
         let star_placements = vec![];
         let dot_placements = vec![];
-        State { star_placements, dot_placements }
+        State {
+            star_placements,
+            dot_placements,
+            row_counts: vec![0; board_size],
+            col_counts: vec![0; board_size],
+            star_counts: HashMap::new()
+        }
     }
 }
 

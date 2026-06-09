@@ -1,5 +1,6 @@
+use std::collections::HashSet;
 use std::time::{Duration, Instant};
-use star_puzzle::board::Board;
+use star_puzzle::board::{Board, State};
 use crate::solver::{Solver, SolverResult};
 
 #[derive(PartialEq, Debug)]
@@ -15,7 +16,7 @@ impl SolverResult for DfsResult {
         println!("    Time: {:?}", self.time);
         println!("    States Explored: {}", self.states_explored);
         println!("    Found Solution: {}", self.found_solution);
-    }   
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -27,7 +28,7 @@ impl Solver for DfsSolver {
     fn solve(&self, board: Board) -> Box<dyn SolverResult> {
         let now = Instant::now();
         let dsf_results = self.dfs_solve(board);
-        
+
         Box::new(DfsResult {
             time: now.elapsed(),
             states_explored: dsf_results.0,
@@ -42,20 +43,23 @@ impl DfsSolver {
     }
 
     fn dfs_solve(&self, board: Board) -> (usize, bool) {
-        let mut states_explored = 0;
+        let mut visited = HashSet::new();
         let mut stack: Vec<Board> = vec!();
         stack.push(board);
 
         while !stack.is_empty() {
             let current_board = stack.pop().unwrap();
-            states_explored += 1;
+            if !visited.insert(current_board.state.clone()) {
+                continue;
+            }
+
             if self.print {
                 println!("--------");
                 current_board.print();
             }
 
             if current_board.is_solved() {
-                return (states_explored, true)
+                return (visited.len(), true)
             }
 
             // Go through board until an empty spot is found
@@ -70,7 +74,7 @@ impl DfsSolver {
                 }
             }
         }
-        
-        (states_explored, false)
+
+        (visited.len(), false)
     }
 }

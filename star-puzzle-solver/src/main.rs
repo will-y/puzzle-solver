@@ -13,7 +13,7 @@ fn main() {
 
     let solvers: Vec<Box<dyn Solver>> = vec![
         Box::new(solver::dfs::DfsSolver::new(false)),
-        Box::new(solver::bfs::BfsSolver::new(false))
+        // Box::new(solver::bfs::BfsSolver::new(false))
     ];
 
     run_solvers(board, &solvers);
