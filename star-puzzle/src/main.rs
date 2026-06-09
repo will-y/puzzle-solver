@@ -34,10 +34,21 @@ fn play_game() {
 
         input_str.retain(|c| !c.is_whitespace());
 
+        let mut dot = false;
+
+        if input_str.starts_with("D") || input_str.starts_with("d") {
+            dot = true;
+            input_str.remove(0);
+        }
+
         let split: Vec<&str> = input_str.split(",").collect();
 
         if split.len() == 2 {
-            board.place_star(split[0].parse::<usize>().unwrap(), split[1].parse::<usize>().unwrap());
+            if dot {
+                board.place_dot(split[0].parse::<usize>().unwrap(), split[1].parse::<usize>().unwrap());
+            } else {
+                board.place_star(split[0].parse::<usize>().unwrap(), split[1].parse::<usize>().unwrap());
+            }
 
             if board.is_solved() {
                 println!("You won!");

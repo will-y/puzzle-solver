@@ -93,7 +93,28 @@ impl Board {
     }
 
     pub fn place_star(&mut self, x: usize, y: usize) {
-        self.state.star_placements.push((x, y));
+        if self.in_range(x, y) {
+            self.state.star_placements.push((x, y));
+
+            for i in -1..2 {
+                for j in -1..2 {
+                    if i != 0 || j != 0 {
+                        let new_x: isize = x as isize + i;
+                        let new_y: isize = y as isize + j;
+
+                        if new_x >= 0 && new_y >= 0 {
+                            self.place_dot(new_x as usize, new_y as usize);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn place_dot(&mut self, x: usize, y: usize) {
+        if self.in_range(x, y) && !self.has_star(x, y) {
+            self.state.dot_placements.push((x, y));
+        }
     }
 
     pub fn has_star(&self, x: usize, y: usize) -> bool {
@@ -124,6 +145,10 @@ impl Board {
             });
             println!();
         });
+    }
+
+    fn in_range(&self, x: usize, y: usize) -> bool {
+        x < self.size && y < self.size
     }
 }
 
