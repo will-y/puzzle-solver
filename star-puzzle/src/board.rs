@@ -1,19 +1,17 @@
 use std::collections::{HashMap, HashSet};
-use std::fmt::Display;
 use colored::{Color, Colorize};
-
-pub mod data;
-pub mod state;
 
 const COLORS: [Color; 10] = [Color::Red, Color::Green, Color::Yellow, Color::Blue, Color::Magenta, Color::White, Color::BrightRed, Color::BrightGreen, Color::BrightBlue, Color::BrightCyan];
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Board {
     color_sections: Vec<ColorSection>,
     star_count: usize,
     max_star_count: usize,
     state: State,
-    size: usize,
+    pub size: usize,
+    row_counts: Vec<usize>, // TODO: should these move to state? Mutable data is also stored in color_sections now ...
+    col_counts: Vec<usize>
 }
 
 impl Board {
@@ -57,44 +55,53 @@ impl Board {
             star_count: 0,
             max_star_count,
             state: State::new(),
-            size: board_size
+            size: board_size,
+            row_counts: vec![0; board_size],
+            col_counts: vec![0; board_size]
         })
-    }
-
-    // TODO: Do I need this or should it validate moves in-place?
-    pub fn is_valid(&self) -> bool {
-        // Rows
-        // Columns
-        // Sections
-        // Adjacent
-        true
     }
 
     pub fn is_solved(&self) -> bool {
         let colors_valid = self
             .color_sections
             .iter()
-            .any(|color_section| color_section.star_count != self.max_star_count);
+            .all(|color_section| color_section.star_count == self.max_star_count);
 
         if !colors_valid {
             return false;
         }
 
-        let mut row_counts = vec![0; self.color_sections.len()];
-        let mut col_counts = vec![0; self.color_sections.len()];
-
-        self.state.star_placements.iter().for_each(|placement| {
-            row_counts[placement.0] += 1;
-            col_counts[placement.1] += 1;
-        });
-
-        !row_counts.iter().any(|x| *x != self.max_star_count)
-            && !col_counts.iter().any(|x| *x != self.max_star_count)
+        !self.row_counts.iter().any(|x| *x != self.max_star_count)
+            && !self.col_counts.iter().any(|x| *x != self.max_star_count)
     }
-
-    pub fn place_star(&mut self, x: usize, y: usize) {
+    
+    pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
         if self.in_range(x, y) {
             self.state.star_placements.push((x, y));
+
+            // Row / Col counts are not correct
+            if self.row_counts[y] + 1 > self.max_star_count {
+                return Err("Too many stars in this column".to_string())
+            }
+
+            if self.col_counts[x] + 1 > self.max_star_count {
+                return Err("Too many stars in this row".to_string())
+            }
+
+            self.row_counts[y] += 1;
+            self.col_counts[x] += 1;
+            
+            for color_section in self.color_sections.iter_mut() {
+                if color_section.positions.contains(&(x, y)) {
+                    if color_section.star_count + 1 > self.max_star_count {
+                        return Err("Too many stars in this color section".to_string())
+                    }
+                    
+                    color_section.star_count += 1;
+                }
+            }
+
+            let mut surrounding: Vec<(usize, usize)> = vec!();
 
             for i in -1..2 {
                 for j in -1..2 {
@@ -103,12 +110,24 @@ impl Board {
                         let new_y: isize = y as isize + j;
 
                         if new_x >= 0 && new_y >= 0 {
-                            self.place_dot(new_x as usize, new_y as usize);
+                            surrounding.push((new_x as usize, new_y as usize));
                         }
                     }
                 }
             }
+
+            if surrounding.iter().any(|pos| self.has_star(pos.0, pos.1)) {
+                return Err("Cannot place star next to another star".to_string())
+            }
+
+            surrounding.iter().for_each(|(x, y)| {
+                self.place_dot(*x, *y);
+            });
+
+            return Ok(())
         }
+
+        Err("Invalid position".to_string())
     }
 
     pub fn place_dot(&mut self, x: usize, y: usize) {
@@ -119,6 +138,14 @@ impl Board {
 
     pub fn has_star(&self, x: usize, y: usize) -> bool {
         self.state.star_placements.contains(&(x, y))
+    }
+
+    pub fn has_dot(&self, x: usize, y: usize) -> bool {
+        self.state.dot_placements.contains(&(x, y))
+    }
+
+    pub fn is_empty(&self, x: usize, y: usize) -> bool {
+        !self.has_star(x, y) && !self.has_dot(x, y)
     }
 
     pub fn print(&self) {
@@ -152,13 +179,13 @@ impl Board {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ColorSection {
     positions: HashSet<(usize, usize)>,
     star_count: usize,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct State {
     star_placements: Vec<(usize, usize)>,
     dot_placements: Vec<(usize, usize)>,
