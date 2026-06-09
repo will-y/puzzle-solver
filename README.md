@@ -10,9 +10,10 @@ Things to consider: if going to do a tree solver, will need to copy the data a l
 
 ###### Data
 - public immutable Board Data (the colors on the board)
-- private State (any placed stars maybe dots too, not sure yet)
+- private State (stars and dots)
+
 ###### Methods
 - isValid()
 - isSolved()
 - placeStar(x, y)
-
+- fromString(string)
