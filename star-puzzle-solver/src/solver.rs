@@ -1,5 +1,7 @@
 pub mod dfs;
 pub mod bfs;
+pub mod rulesolver;
+pub mod rules;
 
 use star_puzzle::board::Board;
 

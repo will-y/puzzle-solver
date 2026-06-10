@@ -1,7 +1,6 @@
 use colored::{Color, Colorize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
-use std::iter::Map;
 
 const COLORS: [Color; 10] = [
     Color::Red,
@@ -18,8 +17,8 @@ const COLORS: [Color; 10] = [
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Board {
-    color_sections: Vec<ColorSection>,
-    max_star_count: usize,
+    pub color_sections: Vec<ColorSection>,
+    pub max_star_count: usize,
     pub size: usize,
     pub state: State,
 }
@@ -52,17 +51,19 @@ impl Board {
             });
         });
 
-        let color_sections = color_section_map
+        let color_sections: Vec<ColorSection> = color_section_map
             .values()
             .map(|positions| ColorSection {
                 positions: positions.clone()
             })
             .collect();
 
+        let initial_color_sections = color_sections.clone();
+
         Ok(Board {
             color_sections,
             max_star_count,
-            state: State::new(board_size),
+            state: State::new(board_size, initial_color_sections),
             size: board_size,
         })
     }
@@ -81,29 +82,17 @@ impl Board {
     }
 
     pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
+        // TODO: Consider moving more of this to state
         if self.in_range(x, y) {
             self.state.star_placements.push((x, y));
 
             // Row / Col counts are not correct
             if self.state.row_counts[y] + 1 > self.max_star_count {
-                return Err("Too many stars in this column".to_string());
+                return Err(format!("Too many stars in column { } (placing star at ({ }, { })", y, x, y));
             }
 
             if self.state.col_counts[x] + 1 > self.max_star_count {
-                return Err("Too many stars in this row".to_string());
-            }
-
-            self.state.row_counts[y] += 1;
-            self.state.col_counts[x] += 1;
-
-            for (i, color_section) in self.color_sections.iter_mut().enumerate() {
-                if color_section.positions.contains(&(x, y)) {
-                    if *self.state.star_counts.entry(i).or_insert(0) + 1 > self.max_star_count {
-                        return Err("Too many stars in this color section".to_string());
-                    }
-
-                    *self.state.star_counts.entry(i).or_insert(0) += 1;
-                }
+                return Err(format!("Too many stars in row { } (placing star at ({ }, { })", x, x, y));
             }
 
             let mut surrounding: Vec<(usize, usize)> = vec![];
@@ -122,8 +111,11 @@ impl Board {
             }
 
             if surrounding.iter().any(|pos| self.has_star(pos.0, pos.1)) {
-                return Err("Cannot place star next to another star".to_string());
+                let conflicting = surrounding.iter().find(|pos| self.has_star(pos.0, pos.1)).unwrap();
+                return Err(format!("Cannot place star next to another star. Placing: ({ }, { }) Existing: ({ }, { })", x, y, conflicting.0, conflicting.1));
             }
+
+            self.state.place_star(x, y, self.max_star_count)?;
 
             surrounding.iter().for_each(|(x, y)| {
                 self.place_dot(*x, *y);
@@ -132,12 +124,12 @@ impl Board {
             return Ok(());
         }
 
-        Err("Invalid position".to_string())
+        Err(format!("Invalid position ({ }, { }", x, y))
     }
 
     pub fn place_dot(&mut self, x: usize, y: usize) {
         if self.in_range(x, y) && !self.has_star(x, y) {
-            self.state.dot_placements.push((x, y));
+            self.state.place_dot(x, y);
         }
     }
 
@@ -186,7 +178,7 @@ impl Board {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ColorSection {
-    positions: HashSet<(usize, usize)>
+    pub positions: HashSet<(usize, usize)>
 }
 
 #[derive(Debug, Clone)]
@@ -195,7 +187,9 @@ pub struct State {
     dot_placements: Vec<(usize, usize)>,
     row_counts: Vec<usize>,
     col_counts: Vec<usize>,
-    star_counts: HashMap<usize, usize>
+    pub current_color_sections: Vec<ColorSection>,
+    // TODO: Just store a version of the color section here that has an up to date shape (removes everything with a dot or star)
+    pub star_counts: HashMap<usize, usize> // Map of color section index to star count in that section
 }
 
 impl PartialEq for State {
@@ -217,15 +211,43 @@ impl Hash for State {
 }
 
 impl State {
-    pub fn new(board_size: usize) -> State {
+    pub fn new(board_size: usize, initial_color_sections: Vec<ColorSection>) -> State {
         let star_placements = vec![];
         let dot_placements = vec![];
+
         State {
             star_placements,
             dot_placements,
             row_counts: vec![0; board_size],
             col_counts: vec![0; board_size],
+            current_color_sections: initial_color_sections,
             star_counts: HashMap::new()
+        }
+    }
+
+    pub fn place_star(&mut self, x: usize, y: usize, max_star_count: usize) -> Result<(), String> {
+        for (i, color_section) in self.current_color_sections.iter_mut().enumerate() {
+            if color_section.positions.contains(&(x, y)) {
+                if *self.star_counts.entry(i).or_insert(0) + 1 > max_star_count {
+                    return Err("Too many stars in this color section".to_string());
+                }
+
+                *self.star_counts.entry(i).or_insert(0) += 1;
+                color_section.positions.remove(&(x, y));
+            }
+        }
+
+        self.row_counts[y] += 1;
+        self.col_counts[x] += 1;
+
+        Ok(())
+    }
+
+    pub fn place_dot(&mut self, x: usize, y: usize) {
+        self.dot_placements.push((x, y));
+
+        for color_section in self.current_color_sections.iter_mut() {
+            color_section.positions.remove(&(x, y));
         }
     }
 }
@@ -251,7 +273,7 @@ mod tests {
 
     #[test]
     fn is_solved_2_stars() {
-        let mut board = Board::from_string("0111222222\n0333332222\n0300332422\n0005552422\n0000000422\n0000222222\n0000067772\n0088862222\n6666669992\n66666662222", 2).unwrap();
+        let mut board = Board::from_string("0111222222\n0333332222\n0300332422\n0005552422\n0000000422\n0000222222\n0000067772\n0088862222\n6666669992\n6666666222", 2).unwrap();
 
         board.print();
     }

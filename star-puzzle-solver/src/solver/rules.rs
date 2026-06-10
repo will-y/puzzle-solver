@@ -1,0 +1,14 @@
+mod linerule2star;
+
+use star_puzzle::board::Board;
+
+pub trait Rule {
+    /// Applies the given rule to the board.
+    /// It returns true if the rule made some change, false otherwise.
+    /// A return of true does not mean that it will not find more things to do if ran again on the same board.
+    fn apply(&self, board: &mut Board) -> bool;
+
+    /// Returns true if this rule can be applied to the given board.
+    /// For example, there can be rules specific to 1-star puzzles
+    fn can_apply(&self, board: &Board) -> bool;
+}
