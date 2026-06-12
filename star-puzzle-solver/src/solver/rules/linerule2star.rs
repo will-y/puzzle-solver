@@ -7,16 +7,17 @@ pub struct LineRule2Star {}
 
 impl Rule for LineRule2Star {
     fn apply(&self, board: &mut Board) -> bool {
-        println!("{:?}", board.state.star_counts);
         let stars_to_add = board
             .state
             .current_color_sections
             .iter_mut()
             .enumerate()
             .flat_map(|(i, section)| {
-                println!("i = { }", i);
-                if section.positions.len() == 3 && *board.state.star_counts.entry(i).or_insert(0) == 0 {
-                    let rand_element = section.positions.iter().next().unwrap();
+                let rand_element = section.positions.iter().next().unwrap();
+                if section.positions.len() == 3
+                    && *board.state.star_counts.entry(i).or_insert(0) == 0 {
+
+                    // TODO: This assumption is wrong. Need to actually make sure they are in a line and connected. (Discontinuous shapes can form while playing)
                     // Don't need to check shape, 3 squares will always work the same
                     return if section.positions.iter().all(|pos| pos.0 == rand_element.0) {
                         // All x the same, place at smallest and largest Y
@@ -24,20 +25,19 @@ impl Rule for LineRule2Star {
                         let max = section.positions.iter().max_by_key(|pos| pos.1).unwrap();
 
                         vec![(rand_element.0, min.1), (rand_element.0, max.1)]
-                    } else {
+                    } else if section.positions.iter().all(|pos| pos.1 == rand_element.1) {
                         // All y the same, place at smallest and largest X
                         let min = section.positions.iter().min_by_key(|pos| pos.0).unwrap();
                         let max = section.positions.iter().max_by_key(|pos| pos.0).unwrap();
 
                         vec![(min.0, rand_element.1), (max.0, rand_element.1)]
+                    } else {
+                        vec![]
                     }
                 }
 
                 vec![]
             }).collect::<Vec<(usize, usize)>>();
-
-        println!("{:?}", stars_to_add);
-
 
         stars_to_add.iter().for_each(|position| {
             board.place_star(position.0, position.1).expect("Could not place star in line rule 2 star rule");
