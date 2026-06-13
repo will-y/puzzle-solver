@@ -261,7 +261,7 @@ impl State {
                 color_section.positions.remove(&(x, y));
             }
         }
-        
+
         inserted
     }
 }
@@ -276,11 +276,13 @@ mod tests {
 
         board.print();
 
-        board.place_star(0, 2);
-        board.place_star(1, 4);
-        board.place_star(2, 0);
-        board.place_star(3, 3);
-        board.place_star(4, 1);
+        board.place_star(0, 2).unwrap();
+        board.place_star(1, 0).unwrap();
+        board.place_star(2, 4).unwrap();
+        board.place_star(3, 1).unwrap();
+        board.place_star(4, 3).unwrap();
+
+        board.print();
 
         assert!(board.is_solved());
     }
