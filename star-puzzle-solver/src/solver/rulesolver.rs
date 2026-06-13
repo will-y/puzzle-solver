@@ -12,7 +12,7 @@ pub struct RuleSolver {
 
 impl Solver for RuleSolver {
     fn solve(&self, board: Board) -> Box<dyn SolverResult> {
-        // TODO: Filter rules to only ones that applu
+        // TODO: Filter rules to only ones that apply
         let mut solving_board = board.clone();
         while !solving_board.is_solved() {
             let rule_changed = self.loop_over_rules(&mut solving_board);

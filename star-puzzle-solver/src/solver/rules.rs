@@ -1,5 +1,6 @@
 pub mod linerule2star;
 pub mod fullarray;
+pub mod fillarray;
 
 use star_puzzle::board::Board;
 

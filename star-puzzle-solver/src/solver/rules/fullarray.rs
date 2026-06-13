@@ -6,13 +6,11 @@ pub struct FullArrayRule {}
 
 impl FullArrayRule {
     fn fill_rows(&self, board: &mut Board) -> bool {
-        let size = board.size;
-        let max_stars = board.max_star_count;
         let mut changed = false;
 
-        for i in 0..size {
-            if board.state.row_counts[i] == max_stars {
-                for j in 0..size {
+        for i in 0..board.size {
+            if board.state.row_counts[i] == board.max_star_count {
+                for j in 0..board.size {
                     changed = board.place_dot(j, i) || changed;
                 }
             }
@@ -22,13 +20,11 @@ impl FullArrayRule {
     }
 
     fn fill_columns(&self, board: &mut Board) -> bool {
-        let size = board.size;
-        let max_stars = board.max_star_count;
         let mut changed = false;
 
-        for i in 0..size {
-            if board.state.col_counts[i] == max_stars {
-                for j in 0..size {
+        for i in 0..board.size {
+            if board.state.col_counts[i] == board.max_star_count {
+                for j in 0..board.size {
                     changed = board.place_dot(i, j) || changed;
                 }
             }
@@ -41,9 +37,9 @@ impl FullArrayRule {
 impl Rule for FullArrayRule {
     fn apply(&self, board: &mut Board) -> bool {
         let rows_filled = self.fill_rows(board);
-        let cols_filled = self.fill_columns(board);
+        let columns_filled = self.fill_columns(board);
 
-        rows_filled || cols_filled
+        rows_filled || columns_filled
     }
 
     fn can_apply(&self, _board: &Board) -> bool {
