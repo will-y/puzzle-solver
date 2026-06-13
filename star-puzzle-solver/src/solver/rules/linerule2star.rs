@@ -13,12 +13,10 @@ impl Rule for LineRule2Star {
             .iter_mut()
             .enumerate()
             .flat_map(|(i, section)| {
-                let rand_element = section.positions.iter().next().unwrap();
                 if section.positions.len() == 3
                     && *board.state.star_counts.entry(i).or_insert(0) == 0 {
+                    let rand_element = section.positions.iter().next().unwrap();
 
-                    // TODO: This assumption is wrong. Need to actually make sure they are in a line and connected. (Discontinuous shapes can form while playing)
-                    // Don't need to check shape, 3 squares will always work the same
                     return if section.positions.iter().all(|pos| pos.0 == rand_element.0) {
                         // All x the same, place at smallest and largest Y
                         let min = section.positions.iter().min_by_key(|pos| pos.1).unwrap();
@@ -61,10 +59,11 @@ mod tests {
 
         let rule = LineRule2Star {};
 
-        rule.apply(&mut board);
+        let result = rule.apply(&mut board);
 
         board.print();
 
+        assert!(result);
         assert!(board.has_star(1, 0));
         assert!(board.has_star(3, 0));
         assert!(board.has_star(3, 3));
@@ -77,5 +76,10 @@ mod tests {
         assert!(board.has_star(8, 8));
         assert!(board.has_star(7, 2));
         assert!(board.has_star(7, 4));
+
+        // Make sure a second run doesn't do anything
+        let second_result = rule.apply(&mut board);
+
+        assert!(!second_result);
     }
 }

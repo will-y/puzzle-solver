@@ -1,4 +1,5 @@
-mod linerule2star;
+pub mod linerule2star;
+pub mod fullarray;
 
 use star_puzzle::board::Board;
 

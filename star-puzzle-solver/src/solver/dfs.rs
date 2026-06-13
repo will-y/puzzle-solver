@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
-use star_puzzle::board::{Board, State};
+use star_puzzle::board::{Board};
 use crate::solver::{Solver, SolverResult};
 
 #[derive(PartialEq, Debug)]

@@ -84,7 +84,7 @@ impl Board {
     pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
         // TODO: Consider moving more of this to state
         if self.in_range(x, y) {
-            self.state.star_placements.push((x, y));
+            self.state.star_placements.insert((x, y));
 
             // Row / Col counts are not correct
             if self.state.row_counts[y] + 1 > self.max_star_count {
@@ -127,10 +127,15 @@ impl Board {
         Err(format!("Invalid position ({ }, { }", x, y))
     }
 
-    pub fn place_dot(&mut self, x: usize, y: usize) {
+    /// Places a dot on the board.
+    ///
+    /// Returns true if the dot was actually placed (not placed on a star or dot)
+    pub fn place_dot(&mut self, x: usize, y: usize) -> bool {
         if self.in_range(x, y) && !self.has_star(x, y) {
-            self.state.place_dot(x, y);
+            return self.state.place_dot(x, y)
         }
+
+        false
     }
 
     pub fn has_star(&self, x: usize, y: usize) -> bool {
@@ -183,12 +188,11 @@ pub struct ColorSection {
 
 #[derive(Debug, Clone)]
 pub struct State {
-    star_placements: Vec<(usize, usize)>,
-    dot_placements: Vec<(usize, usize)>,
-    row_counts: Vec<usize>,
-    col_counts: Vec<usize>,
+    pub star_placements: HashSet<(usize, usize)>,
+    pub dot_placements: HashSet<(usize, usize)>,
+    pub row_counts: Vec<usize>,
+    pub col_counts: Vec<usize>,
     pub current_color_sections: Vec<ColorSection>,
-    // TODO: Just store a version of the color section here that has an up to date shape (removes everything with a dot or star)
     pub star_counts: HashMap<usize, usize> // Map of color section index to star count in that section
 }
 
@@ -204,16 +208,22 @@ impl Eq for State {
 }
 
 impl Hash for State {
+    // Gross but whatever
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.star_placements.hash(state);
-        self.dot_placements.hash(state);
+        let mut stars: Vec<&(usize, usize)> = self.star_placements.iter().collect();
+        stars.sort();
+        stars.hash(state);
+
+        let mut dots: Vec<&(usize, usize)> = self.dot_placements.iter().collect();
+        dots.sort();
+        dots.hash(state);
     }
 }
 
 impl State {
     pub fn new(board_size: usize, initial_color_sections: Vec<ColorSection>) -> State {
-        let star_placements = vec![];
-        let dot_placements = vec![];
+        let star_placements = HashSet::new();
+        let dot_placements = HashSet::new();
 
         State {
             star_placements,
@@ -243,12 +253,16 @@ impl State {
         Ok(())
     }
 
-    pub fn place_dot(&mut self, x: usize, y: usize) {
-        self.dot_placements.push((x, y));
+    pub fn place_dot(&mut self, x: usize, y: usize) -> bool {
+        let inserted = self.dot_placements.insert((x, y));
 
-        for color_section in self.current_color_sections.iter_mut() {
-            color_section.positions.remove(&(x, y));
+        if inserted {
+            for color_section in self.current_color_sections.iter_mut() {
+                color_section.positions.remove(&(x, y));
+            }
         }
+        
+        inserted
     }
 }
 
