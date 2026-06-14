@@ -25,7 +25,7 @@ pub struct DfsSolver {
 }
 
 impl Solver for DfsSolver {
-    fn solve(&self, board: Board) -> Box<dyn SolverResult> {
+    fn solve(&self, board: &mut Board) -> Box<dyn SolverResult> {
         let now = Instant::now();
         let dsf_results = self.dfs_solve(board);
 
@@ -42,10 +42,10 @@ impl DfsSolver {
         DfsSolver { print }
     }
 
-    fn dfs_solve(&self, board: Board) -> (usize, bool) {
+    fn dfs_solve(&self, board: &mut Board) -> (usize, bool) {
         let mut visited = HashSet::new();
         let mut stack: Vec<Board> = vec!();
-        stack.push(board);
+        stack.push(board.clone());
 
         while !stack.is_empty() {
             let current_board = stack.pop().unwrap();

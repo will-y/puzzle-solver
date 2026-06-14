@@ -23,7 +23,7 @@ fn run_solvers(board: Board, solvers: &Vec<Box<dyn Solver>>) {
 
     // TODO: Figure out moving / references again so I don't need extra clones
     solvers.iter().for_each(|solver| {
-        let result = solver.solve(board.clone());
+        let result = solver.solve(&mut board.clone());
         result.print_results();
     });
 }

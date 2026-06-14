@@ -25,7 +25,7 @@ pub struct BfsSolver {
 }
 
 impl Solver for BfsSolver {
-    fn solve(&self, board: Board) -> Box<dyn SolverResult> {
+    fn solve(&self, board: &mut Board) -> Box<dyn SolverResult> {
         let now = Instant::now();
         let bsf_results = self.bfs_solve(board);
 
@@ -42,10 +42,10 @@ impl BfsSolver {
         BfsSolver { print }
     }
 
-    fn bfs_solve(&self, board: Board) -> (usize, bool) {
+    fn bfs_solve(&self, board: &mut Board) -> (usize, bool) {
         let mut states_explored = 0;
         let mut queue: VecDeque<Board> = VecDeque::new();
-        queue.push_back(board);
+        queue.push_back(board.clone());
 
         while !queue.is_empty() {
             let current_board = queue.pop_front().unwrap();
