@@ -149,8 +149,8 @@ impl Board {
     pub fn is_empty(&self, x: usize, y: usize) -> bool {
         !self.has_star(x, y) && !self.has_dot(x, y)
     }
-
-    pub fn print(&self) {
+    
+    pub fn create_color_map(&self) -> Vec<Vec<usize>> {
         let mut color_map = vec![vec!(0; self.size); self.size];
 
         self.color_sections
@@ -161,6 +161,12 @@ impl Board {
                     color_map[*y][*x] = i;
                 });
             });
+        
+        color_map
+    }
+
+    pub fn print(&self) {
+        let color_map = self.create_color_map();
 
         color_map.iter().enumerate().for_each(|(y, row)| {
             row.iter().enumerate().for_each(|(x, c)| {
