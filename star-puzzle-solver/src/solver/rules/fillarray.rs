@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use star_puzzle::board::Board;
 use crate::solver::rules::Rule;
 
-/// This rule fills in a row or column if it only has `max_stars` number of empty spaces.
+/// This rule fills in a row or column if it has an equal number of required stars and empty spaces.
 /// TODO: Make this smarter and able to solve more complex row / col only scenarios
 /// Ex: with 3 stars ..._____... = ...*.*.*...
 /// or with 2 stars ..__..._. = ..__...*.
@@ -71,6 +71,14 @@ impl Rule for FillArrayRule {
         let columns_filled = self.fill_columns(board);
 
         rows_filled || columns_filled
+    }
+
+    fn name(&self) -> String {
+        String::from("Place Star in Row / Column")
+    }
+
+    fn short_description(&self) -> String {
+        String::from("Places stars in a row or column if it has an equal number of required stars and empty spaces")
     }
 }
 

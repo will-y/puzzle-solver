@@ -30,11 +30,15 @@ impl RuleSolver {
     /// Loops over all rules.
     ///
     /// Returns true if any rule provided any value.
-    fn loop_over_rules(&self, board: &mut Board) -> bool {
+    fn loop_over_rules(&self, board: &mut Board, applied_rule: &mut Vec<AppliedRule>) -> bool {
         let mut changed = false;
         self.rules.iter().for_each(|rule| {
             if rule.apply(board) {
                 changed = true;
+                applied_rule.push(AppliedRule {
+                    name: rule.name(),
+                    description: rule.short_description(),
+                });
             }
         });
 
@@ -64,14 +68,14 @@ impl RuleSolver {
             return;
         }
         // Run rules until done or contradiction
-        while self.loop_over_rules(&mut board_copy) {
+        while self.loop_over_rules(&mut board_copy, &mut vec![]) {
             if self.board_has_contradictions(&board_copy) {
                 board.place_dot(star_point.0, star_point.1);
                 return;
             }
         }
 
-        // TODO: Here it is either solved or retry recursivly?
+        // TODO: Here it is either solved or retry recursively?
         // Keep a list of stars and dots? Then apply them all if solved?
         println!("If we get here things are going to break");
     }
@@ -108,26 +112,59 @@ impl RuleSolver {
 impl Solver for RuleSolver {
     fn solve(&self, board: &mut Board) -> Box<dyn SolverResult> {
         // TODO: Filter rules to only ones that apply
+        let mut applied_rules: Vec<AppliedRule> = vec![];
+
         while !board.is_solved() {
-            let rule_changed = self.loop_over_rules(board);
+            let rule_changed = self.loop_over_rules(board, &mut applied_rules);
             println!("After Rule Iterations: ");
             board.print();
 
             if !rule_changed {
                 self.guess_and_check(board);
+                applied_rules.push(AppliedRule {
+                    name: "Guess and Check".to_string(),
+                    description: "Guess a star and check if it leads to a contradiction".to_string(),
+                });
                 println!("After guess and check");
                 board.print();
             }
         }
 
-        Box::new(RuleSolverResult {})
+        Box::new(RuleSolverResult { applied_rules})
     }
 }
 
-pub struct RuleSolverResult {}
+pub struct RuleSolverResult {
+    applied_rules: Vec<AppliedRule>
+}
 
 impl SolverResult for RuleSolverResult {
-    fn print_results(&self) {}
+    fn print_results(&self) {
+        println!("Rule Solver Results:");
+        println!("    Applied Rules:");
+        self.applied_rules.iter().for_each(|rule| {
+            println!("        {}: {}", rule.name, rule.description);
+        });
+    }
+
+    fn format_results(&self) -> String {
+        let mut result = String::new();
+        result.push_str("Rule Solver Results:");
+        result.push_str("\n    Applied Rules:");
+        self.applied_rules.iter().for_each(|rule| {
+            result.push_str("\n        ");
+            result.push_str(&rule.name);
+        });
+        
+        result
+    }
+}
+
+/// A struct that keeps track of the rules that were applied.
+#[derive(Debug)]
+pub struct AppliedRule {
+    name: String,
+    description: String,
 }
 
 #[cfg(test)]

@@ -72,6 +72,14 @@ impl Rule for FinishColorRule {
 
         dots || stars
     }
+
+    fn name(&self) -> String {
+        String::from("Finish Color")
+    }
+
+    fn short_description(&self) -> String {
+        String::from("Fills in full colors with dots and places stars if there equal empty spaces and required stars")
+    }
 }
 
 #[cfg(test)]

@@ -17,6 +17,10 @@ impl SolverResult for DfsResult {
         println!("    States Explored: {}", self.states_explored);
         println!("    Found Solution: {}", self.found_solution);
     }
+
+    fn format_results(&self) -> String {
+        String::from("TODO: BFS Solver Results:")
+    }
 }
 
 #[derive(PartialEq, Debug)]

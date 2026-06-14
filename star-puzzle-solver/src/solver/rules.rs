@@ -13,9 +13,13 @@ pub trait Rule {
 
     /// Returns true if this rule can be applied to the given board.
     /// For example, there can be rules specific to 1-star puzzles.
-    /// 
+    ///
     /// By default, rules can apply to all boards
     fn can_apply(&self, _board: &Board) -> bool {
         true
     }
+
+    fn name(&self) -> String;
+
+    fn short_description(&self) -> String;
 }

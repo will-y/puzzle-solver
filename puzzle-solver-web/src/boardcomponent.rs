@@ -5,7 +5,7 @@ use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 use web_sys::js_sys::Math::{cos, sin};
 use star_puzzle::board::Board;
-use star_puzzle_solver::solver::rulesolver::RuleSolver;
+use star_puzzle_solver::solver::rulesolver::{AppliedRule, RuleSolver};
 
 const COLORS: [&str; 15] = [
     "#FF5733", // Vibrant Red-Orange
@@ -32,6 +32,9 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
     let board_size = move || board.read().size;
     let canvas_ref = NodeRef::<Canvas>::new();
 
+    // TODO: This is not great, just use a <pre> with what I was doing before?
+    let (solver_results, set_solver_result) = signal(vec![]);
+
     Effect::new(move |_| {
         if let Some(node) = canvas_ref.get() {
             let context = node
@@ -49,17 +52,31 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
         <div>
             <p>{board_size}</p>
             <canvas width=move || {board_size() * SQUARE_SIZE} height=move || {board_size() * SQUARE_SIZE} node_ref=canvas_ref></canvas>
-            <button on:click=move |_| solve_board(board)>
+            <button on:click=move |_| solve_board(board, set_solver_result)>
                 "Solve"
             </button>
+            <p>
+                <ul>
+                    <For
+                        each=move || solver_results.get().into_iter()
+                        key=move |result| result.id.clone()
+                        children=move |result| {
+                            view! {
+                                <li>{result.value}</li>
+                            }
+                        }
+                    />
+                 </ul>
+            </p>
         </div>
     }
 }
 
-fn solve_board(board: RwSignal<Board>) {
+fn solve_board(board: RwSignal<Board>, set_solver_result: WriteSignal<Vec<StringListEntry>>) {
     board.update(|board| {
         let solver = RuleSolver::default();
-        solver.solve(board);
+        let solver_result = solver.solve(board);
+        set_solver_result.set(solver_result.format_results().split('\n').map(|s| StringListEntry::new(s.to_string())).collect());
     });
 }
 
@@ -85,8 +102,8 @@ fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d) {
 }
 
 fn draw_star(context: &web_sys::CanvasRenderingContext2d, x: usize, y: usize) {
-    let mut rot = std::f64::consts::PI / 2.0 * 3.0;
-    let step = std::f64::consts::PI / 5.0;
+    let mut rot = PI / 2.0 * 3.0;
+    let step = PI / 5.0;
     let outer_radius = SQUARE_SIZE as f64 / 3.0;
     let inner_radius = outer_radius / 2.5;
 
@@ -120,4 +137,16 @@ fn draw_dot(context: &web_sys::CanvasRenderingContext2d, x: usize, y: usize) {
     context.arc(x as f64, y as f64, 3.0, 0.0, 2.0 * PI).unwrap();
     context.set_fill_style_str("#000000");
     context.fill();
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+struct StringListEntry {
+    value: String,
+    id: String
+}
+
+impl StringListEntry {
+    fn new(value: String) -> Self {
+        Self { value, id: uuid::Uuid::new_v4().to_string() }
+    }
 }

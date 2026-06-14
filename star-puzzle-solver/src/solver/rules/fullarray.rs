@@ -41,6 +41,14 @@ impl Rule for FullArrayRule {
 
         rows_filled || columns_filled
     }
+
+    fn name(&self) -> String {
+        String::from("Fill row / column with dots")
+    }
+
+    fn short_description(&self) -> String {
+        String::from("Fills a row or column with dots if it has the max number of stars in it")
+    }
 }
 
 #[cfg(test)]

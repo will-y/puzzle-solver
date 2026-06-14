@@ -47,6 +47,14 @@ impl Rule for LineRule2Star {
     fn can_apply(&self, board: &Board) -> bool {
         board.max_star_count == 2
     }
+
+    fn name(&self) -> String {
+        String::from("3x1 Shape Rule (2-star only)")
+    }
+
+    fn short_description(&self) -> String {
+        String::from("Places 2 stars in a row or column if there are 3 empty spaces in a row / column")
+    }
 }
 
 #[cfg(test)]

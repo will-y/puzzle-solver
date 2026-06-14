@@ -13,4 +13,6 @@ pub trait Solver {
 
 pub trait SolverResult {
     fn print_results(&self);
+
+    fn format_results(&self) -> String;
 }
