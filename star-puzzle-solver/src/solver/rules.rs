@@ -1,6 +1,7 @@
 pub mod linerule2star;
 pub mod fullarray;
 pub mod fillarray;
+pub mod finishcolor;
 
 use star_puzzle::board::Board;
 
@@ -11,6 +12,10 @@ pub trait Rule {
     fn apply(&self, board: &mut Board) -> bool;
 
     /// Returns true if this rule can be applied to the given board.
-    /// For example, there can be rules specific to 1-star puzzles
-    fn can_apply(&self, board: &Board) -> bool;
+    /// For example, there can be rules specific to 1-star puzzles.
+    /// 
+    /// By default, rules can apply to all boards
+    fn can_apply(&self, _board: &Board) -> bool {
+        true
+    }
 }

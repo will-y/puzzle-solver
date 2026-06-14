@@ -35,7 +35,7 @@ impl Board {
     ///
     /// let board = Board::from_string("00011\n21113\n21433\n44433\n44444", 1).unwrap();
     ///
-    /// assert!(board.is_valid());
+    /// assert!(board.is_empty(0, 0));
     /// ```
     pub fn from_string(s: &str, max_star_count: usize) -> Result<Board, String> {
         let board_size = s.lines().count();

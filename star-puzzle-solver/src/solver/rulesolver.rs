@@ -1,7 +1,8 @@
-use crate::solver::rules::Rule;
 use crate::solver::rules::fillarray::FillArrayRule;
+use crate::solver::rules::finishcolor::FinishColorRule;
 use crate::solver::rules::fullarray::FullArrayRule;
 use crate::solver::rules::linerule2star::LineRule2Star;
+use crate::solver::rules::Rule;
 use crate::solver::{Solver, SolverResult};
 use star_puzzle::board::Board;
 
@@ -22,6 +23,7 @@ impl RuleSolver {
             Box::new(LineRule2Star {}),
             Box::new(FillArrayRule {}),
             Box::new(FullArrayRule {}),
+            Box::new(FinishColorRule {})
         ])
     }
 
@@ -81,7 +83,7 @@ impl RuleSolver {
     fn find_star_to_guess(&self, board: &Board) -> (usize, usize) {
         for x in 0..board.size {
             for y in 0..board.size {
-                if !board.has_star(x, y) && !board.has_dot(x, y) {
+                if board.is_empty(x, y) {
                     return (x, y);
                 }
             }

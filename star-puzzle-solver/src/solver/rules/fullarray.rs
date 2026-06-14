@@ -41,10 +41,6 @@ impl Rule for FullArrayRule {
 
         rows_filled || columns_filled
     }
-
-    fn can_apply(&self, _board: &Board) -> bool {
-        true
-    }
 }
 
 #[cfg(test)]
