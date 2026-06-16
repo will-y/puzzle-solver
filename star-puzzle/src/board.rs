@@ -292,11 +292,4 @@ mod tests {
 
         assert!(board.is_solved());
     }
-
-    #[test]
-    fn is_solved_2_stars() {
-        let mut board = Board::from_string("0111222222\n0333332222\n0300332422\n0005552422\n0000000422\n0000222222\n0000067772\n0088862222\n6666669992\n6666666222", 2).unwrap();
-
-        board.print();
-    }
 }

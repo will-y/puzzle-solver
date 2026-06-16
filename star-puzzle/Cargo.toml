@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 colored = "3"
+rand = "0.8"
+itertools = "0.14.0"

@@ -1,7 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["star-puzzle", "star-puzzle-solver", "puzzle-solver-web"]
+members = ["star-puzzle", "star-puzzle-solver", "puzzle-solver-web", "utilities"]
 
 [workspace.dependencies]
 star-puzzle = { path = "star-puzzle" }
 star-puzzle-solver = { path = "star-puzzle-solver" }
+utilities = { path = "utilities" }
