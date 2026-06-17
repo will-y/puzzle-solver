@@ -9,6 +9,7 @@ star-puzzle-solver = {workspace = true}
 console_error_panic_hook = "0.1.7"
 leptos = { version = "0.8.19", features = ["csr"] }
 uuid = { version = "1.23.3", features = ["v4", "js"] }
+getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.web-sys]
 version = "0.3"

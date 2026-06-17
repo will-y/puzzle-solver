@@ -4,6 +4,7 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
+utilities = {workspace = true}
 colored = "3"
 rand = "0.8"
 itertools = "0.14.0"

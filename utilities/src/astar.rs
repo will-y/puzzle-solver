@@ -81,7 +81,7 @@ fn reconstruct_path(n: Node, came_from: HashMap<(usize, usize), (usize, usize)>)
     path
 }
 
-fn neighbors(pos: (usize, usize), max_x: usize, max_y: usize) -> Vec<(usize, usize)> {
+pub fn neighbors(pos: (usize, usize), max_x: usize, max_y: usize) -> Vec<(usize, usize)> {
     vec![(pos.0, pos.1 + 1),
          (pos.0, if pos.1 > 0 { pos.1 - 1 } else { max_y }),
          (pos.0 + 1, pos.1),

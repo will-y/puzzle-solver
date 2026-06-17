@@ -2,7 +2,7 @@ use colored::{Color, Colorize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
-const COLORS: [Color; 10] = [
+const COLORS: [Color; 11] = [
     Color::Red,
     Color::Green,
     Color::Yellow,
@@ -13,6 +13,7 @@ const COLORS: [Color; 10] = [
     Color::BrightGreen,
     Color::BrightBlue,
     Color::BrightCyan,
+    Color::BrightMagenta
 ];
 
 #[derive(PartialEq, Debug, Clone)]
@@ -51,6 +52,37 @@ impl Board {
             });
         });
 
+        let color_sections: Vec<ColorSection> = color_section_map
+            .values()
+            .map(|positions| ColorSection {
+                positions: positions.clone()
+            })
+            .collect();
+
+        let initial_color_sections = color_sections.clone();
+
+        Ok(Board {
+            color_sections,
+            max_star_count,
+            state: State::new(board_size, initial_color_sections),
+            size: board_size,
+        })
+    }
+
+    pub fn from_color_map(color_map: &Vec<Vec<usize>>, max_star_count: usize) -> Result<Board, String> {
+        let board_size = color_map.len();
+        let mut color_section_map: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
+
+        color_map.iter().enumerate().for_each(|(y, row)| {
+            row.iter().enumerate().for_each(|(x, c)| {
+                color_section_map
+                    .entry(*c)
+                    .or_insert(HashSet::new())
+                    .insert((x, y));
+            });
+        });
+
+        // TODO: Combine this part with the one above
         let color_sections: Vec<ColorSection> = color_section_map
             .values()
             .map(|positions| ColorSection {
