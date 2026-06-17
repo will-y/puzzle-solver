@@ -7,14 +7,16 @@ use utilities::astar;
 /// Generates a board with `max_star_count` stars.
 /// The size will be `max_star_count` * 5.
 ///
+/// `difficulty` is a float from 0-1 that determines how hard the generated puzzle will be.
+///
 /// # Example
 /// ```
 /// use star_puzzle::generator::generate_board;
 /// let board = generate_board(2).unwrap();
 /// board.print();
 /// ```
-pub fn generate_board(max_star_count: usize) -> Result<Board, String> {
-    validate_arguments(max_star_count)?;
+pub fn generate_board(max_star_count: usize, difficulty: f32) -> Result<Board, String> {
+    validate_arguments(max_star_count, difficulty)?;
 
     let board_size = max_star_count * 5;
     let mut attempts = 0;
@@ -35,12 +37,11 @@ pub fn generate_board(max_star_count: usize) -> Result<Board, String> {
                 continue;
             },
         }
-        println!("{:?}", color_map);
         let board = Board::from_color_map(&color_map, max_star_count)?;
         println!("Board Before Flood Fill:");
         board.print();
         // 4. Flood fill color sections
-        flood_fill_color_map(&mut color_map);
+        flood_fill_color_map(&mut color_map, board_size, difficulty);
         let board = Board::from_color_map(&color_map, max_star_count)?;
         println!("Board After Flood Fill:");
         board.print();
@@ -50,9 +51,13 @@ pub fn generate_board(max_star_count: usize) -> Result<Board, String> {
     Err("Failed to generate board after 100 attempts".to_string())
 }
 
-fn validate_arguments(max_star_count: usize) -> Result<(), String> {
+fn validate_arguments(max_star_count: usize, difficulty: f32) -> Result<(), String> {
     if max_star_count > 5 {
         return Err("Star count must be at most 5".to_string());
+    }
+
+    if difficulty < 0.0 || difficulty > 1.0 {
+        return Err("Difficulty must be between 0 and 1".to_string());
     }
 
     Ok(())
@@ -248,8 +253,15 @@ fn run_a_star_for_color_map(
     astar::run_board_a_star(color_map, start, end_condition, heuristic, valid_space)
 }
 
-fn flood_fill_color_map(color_map: &mut Vec<Vec<usize>>) {
+fn flood_fill_color_map(color_map: &mut Vec<Vec<usize>>, board_size: usize, difficulty: f32) {
     // 1. Get a set of all uncolored positions
+    let difficulty_color_count = ((difficulty * board_size as f32).round() as usize).clamp(1, board_size);
+
+    let difficulty_colors = (1..=board_size).into_iter()
+        .choose_multiple(&mut rand::thread_rng(), difficulty_color_count)
+        .into_iter()
+        .collect::<HashSet<_>>();
+
     let mut uncolored_positions: HashSet<(usize, usize)> = HashSet::new();
     color_map.iter().enumerate().for_each(|(y, row)| {
         row.iter().enumerate().for_each(|(x, c)| {
@@ -265,11 +277,17 @@ fn flood_fill_color_map(color_map: &mut Vec<Vec<usize>>) {
         uncolored_positions.iter().for_each(|original_pos| {
             let neighbors = astar::neighbors(*original_pos, color_map[0].len(), color_map.len());
             neighbors.iter()
-                .filter(|pos| color_map[pos.1][pos.0] != 0)
+                .filter(|pos| difficulty_colors.contains(&color_map[pos.1][pos.0]))
                 .for_each(|pos| {
                     uncolored_positions_next_to_colored.entry(*original_pos).or_insert(vec![]).push(color_map[pos.1][pos.0]);
                 })
         });
+
+        if uncolored_positions_next_to_colored.len() == 0 {
+            // Can't keep going with this difficulty, try again with a harder difficulty
+            flood_fill_color_map(color_map, board_size, difficulty + 0.1);
+            return;
+        }
 
         // Color them randomly
         uncolored_positions_next_to_colored.iter().for_each(|(pos, colors)| {
@@ -278,11 +296,6 @@ fn flood_fill_color_map(color_map: &mut Vec<Vec<usize>>) {
             uncolored_positions.remove(pos);
         });
     }
-
-    // 2. While there are still uncolored positions:
-    // 1. Get a list of all positions adjacent to some colored position
-    // 2. For each one, give it the color of a random adjacent color
-    // 3. Remove the colored position from the list of uncolored positions
 }
 
 #[derive(Debug, Clone)]
@@ -296,6 +309,7 @@ mod tests {
     use super::*;
 
     #[test]
+
     fn it_generates_correct_amount_of_stars() {
         for i in 0..1000 {
             let star_positions = get_random_star_placements(2, 10);
@@ -306,7 +320,7 @@ mod tests {
     #[test]
     fn it_generates_correct_board_size() {
         for i in 0..100 {
-            let board = generate_board(2);
+            let board = generate_board(2, 1.0);
             assert!(board.is_ok(), "Failed on iteration {}", i);
         }
     }
