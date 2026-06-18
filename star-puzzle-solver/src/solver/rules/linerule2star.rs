@@ -6,7 +6,7 @@ use star_puzzle::board::Board;
 pub struct LineRule2Star {}
 
 impl Rule for LineRule2Star {
-    fn apply(&self, board: &mut Board) -> bool {
+    fn apply(&self, board: &mut Board) -> Result<bool, String> {
         let stars_to_add = board
             .state
             .current_color_sections
@@ -37,11 +37,11 @@ impl Rule for LineRule2Star {
                 vec![]
             }).collect::<Vec<(usize, usize)>>();
 
-        stars_to_add.iter().for_each(|position| {
-            board.place_star(position.0, position.1).expect("Could not place star in line rule 2 star rule");
-        });
+        for pos in &stars_to_add {
+            board.place_star(pos.0, pos.1)?
+        }
 
-        stars_to_add.len() > 0
+        Ok(stars_to_add.len() > 0)
     }
 
     fn can_apply(&self, board: &Board) -> bool {
@@ -71,7 +71,7 @@ mod tests {
 
         board.print();
 
-        assert!(result);
+        assert!(result.unwrap());
         assert!(board.has_star(1, 0));
         assert!(board.has_star(3, 0));
         assert!(board.has_star(3, 3));
@@ -88,6 +88,6 @@ mod tests {
         // Make sure a second run doesn't do anything
         let second_result = rule.apply(&mut board);
 
-        assert!(!second_result);
+        assert!(!second_result.unwrap());
     }
 }

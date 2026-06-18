@@ -1,9 +1,8 @@
 mod boardcomponent;
 
-use leptos::prelude::*;
-use star_puzzle::board::Board;
-use star_puzzle::generator::generate_board;
 use crate::boardcomponent::BoardComponent;
+use leptos::prelude::*;
+use star_puzzle::generator::generate_board;
 
 fn main() {
     console_error_panic_hook::set_once();

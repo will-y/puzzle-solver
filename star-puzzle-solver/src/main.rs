@@ -9,11 +9,12 @@ fn main() {
     let board_2 = Board::from_string("0111222222\n0333332222\n0300332422\n0005552422\n0000000422\n0000222222\n0000067772\n0088862222\n6666669992\n6666666222", 2).unwrap();
 
     let solvers: Vec<Box<dyn Solver>> = vec![
-        Box::new(solver::dfs::DfsSolver::new(false)),
-        Box::new(solver::bfs::BfsSolver::new(false))
+        Box::new(solver::dfs::DfsSolver::new(true)),
+        Box::new(solver::bfs::BfsSolver::new(false)),
+        Box::new(solver::rulesolver::RuleSolver::default())
     ];
 
-    run_solvers(board, &solvers);
+    // run_solvers(board, &solvers);
     run_solvers(board_2, &solvers);
 }
 

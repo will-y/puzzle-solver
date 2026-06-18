@@ -7,7 +7,7 @@ use star_puzzle::board::{Board};
 pub struct FinishColorRule {}
 
 impl FinishColorRule {
-    fn fill_color_dots(&self, board: &mut Board) -> bool {
+    fn fill_color_dots(&self, board: &mut Board) -> Result<bool, String> {
         let mut changed = false;
         let positions = board
             .state
@@ -31,10 +31,10 @@ impl FinishColorRule {
             board.place_dot(*x, *y);
         });
 
-        changed
+        Ok(changed)
     }
 
-    fn fill_color_stars(&self, board: &mut Board) -> bool {
+    fn fill_color_stars(&self, board: &mut Board) -> Result<bool, String> {
         let mut changed = false;
         let positions: Vec<(usize, usize)> = board
             .state
@@ -57,20 +57,20 @@ impl FinishColorRule {
             })
             .collect::<Vec<(usize, usize)>>();
 
-        positions.iter().for_each(|(x, y)| {
-            board.place_star(*x, *y).expect("Could not place star in finish color rule");
-        });
+        for (x, y) in &positions {
+            board.place_star(*x, *y)?;
+        }
 
-        changed
+        Ok(changed)
     }
 }
 
 impl Rule for FinishColorRule {
-    fn apply(&self, board: &mut Board) -> bool {
-        let dots = self.fill_color_dots(board);
-        let stars = self.fill_color_stars(board);
+    fn apply(&self, board: &mut Board) -> Result<bool, String> {
+        let dots = self.fill_color_dots(board)?;
+        let stars = self.fill_color_stars(board)?;
 
-        dots || stars
+        Ok(dots || stars)
     }
 
     fn name(&self) -> String {
@@ -93,7 +93,7 @@ mod tests {
 
         let rule = FinishColorRule {};
 
-        assert!(rule.apply(&mut board));
+        assert!(rule.apply(&mut board).unwrap());
 
         board.print();
 

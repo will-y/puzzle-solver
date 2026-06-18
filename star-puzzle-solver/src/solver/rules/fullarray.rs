@@ -35,11 +35,11 @@ impl FullArrayRule {
 }
 
 impl Rule for FullArrayRule {
-    fn apply(&self, board: &mut Board) -> bool {
+    fn apply(&self, board: &mut Board) -> Result<bool, String> {
         let rows_filled = self.fill_rows(board);
         let columns_filled = self.fill_columns(board);
 
-        rows_filled || columns_filled
+        Ok(rows_filled || columns_filled)
     }
 
     fn name(&self) -> String {
@@ -63,7 +63,7 @@ mod tests {
 
         let rule = FullArrayRule { };
 
-        assert!(rule.apply(&mut board));
+        assert!(rule.apply(&mut board).unwrap());
 
         board.print();
 

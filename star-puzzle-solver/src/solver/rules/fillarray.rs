@@ -22,7 +22,7 @@ impl FillArrayRule {
         indices.into_iter().collect::<Vec<usize>>()
     }
 
-    fn fill_rows(&self, board: &mut Board) -> bool {
+    fn fill_rows(&self, board: &mut Board) -> Result<bool, String> {
         let mut changed = false;
 
         for i in 0..board.size {
@@ -32,7 +32,7 @@ impl FillArrayRule {
 
                 if empty_indices.len() == available_stars {
                     for j in empty_indices {
-                        board.place_star(j, i).unwrap();
+                        board.place_star(j, i)?
                     }
 
                     changed = true;
@@ -40,10 +40,10 @@ impl FillArrayRule {
             }
         }
 
-        changed
+        Ok(changed)
     }
 
-    fn fill_columns(&self, board: &mut Board) -> bool {
+    fn fill_columns(&self, board: &mut Board) -> Result<bool, String> {
         let mut changed = false;
 
         for i in 0..board.size {
@@ -53,7 +53,7 @@ impl FillArrayRule {
 
                 if empty_indices.len() == available_stars {
                     for j in empty_indices {
-                        board.place_star(i, j).unwrap();
+                        board.place_star(i, j)?;
                     }
 
                     changed = true;
@@ -61,16 +61,16 @@ impl FillArrayRule {
             }
         }
 
-        changed
+        Ok(changed)
     }
 }
 
 impl Rule for FillArrayRule {
-    fn apply(&self, board: &mut Board) -> bool {
-        let rows_filled = self.fill_rows(board);
-        let columns_filled = self.fill_columns(board);
+    fn apply(&self, board: &mut Board) -> Result<bool, String> {
+        let rows_filled = self.fill_rows(board)?;
+        let columns_filled = self.fill_columns(board)?;
 
-        rows_filled || columns_filled
+        Ok(rows_filled || columns_filled)
     }
 
     fn name(&self) -> String {
@@ -110,7 +110,7 @@ mod tests {
 
         let rule = FillArrayRule { };
 
-        assert!(rule.apply(&mut board));
+        assert!(rule.apply(&mut board).unwrap());
 
         board.print();
 

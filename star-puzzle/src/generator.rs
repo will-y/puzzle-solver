@@ -69,7 +69,7 @@ fn get_random_star_placements(max_star_count: usize, board_size: usize) -> HashS
         col_counts: vec![0; board_size],
     };
 
-    let solved_state = get_random_star_placements_backtrace(initial_state, max_star_count)
+    let solved_state = get_random_star_placements_backtrack(initial_state, max_star_count)
         .expect("No solution found");
 
     let mut result: HashSet<(usize, usize)> = HashSet::new();
@@ -87,7 +87,7 @@ fn get_random_star_placements(max_star_count: usize, board_size: usize) -> HashS
     result
 }
 
-fn get_random_star_placements_backtrace(state: State, max_star_count: usize) -> Option<State> {
+fn get_random_star_placements_backtrack(state: State, max_star_count: usize) -> Option<State> {
     if state.col_counts.iter().all(|x| *x == max_star_count) {
         return Some(state);
     }
@@ -110,7 +110,7 @@ fn get_random_star_placements_backtrace(state: State, max_star_count: usize) -> 
         }
         next_state.x_coords.push(choice);
 
-        match get_random_star_placements_backtrace(next_state, max_star_count) {
+        match get_random_star_placements_backtrack(next_state, max_star_count) {
             Some(s) => return Some(s),
             None => (),
         };

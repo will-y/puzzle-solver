@@ -13,7 +13,7 @@ const COLORS: [Color; 11] = [
     Color::BrightGreen,
     Color::BrightBlue,
     Color::BrightCyan,
-    Color::BrightMagenta
+    Color::BrightMagenta,
 ];
 
 #[derive(PartialEq, Debug, Clone)]
@@ -55,7 +55,7 @@ impl Board {
         let color_sections: Vec<ColorSection> = color_section_map
             .values()
             .map(|positions| ColorSection {
-                positions: positions.clone()
+                positions: positions.clone(),
             })
             .collect();
 
@@ -69,7 +69,10 @@ impl Board {
         })
     }
 
-    pub fn from_color_map(color_map: &Vec<Vec<usize>>, max_star_count: usize) -> Result<Board, String> {
+    pub fn from_color_map(
+        color_map: &Vec<Vec<usize>>,
+        max_star_count: usize,
+    ) -> Result<Board, String> {
         let board_size = color_map.len();
         let mut color_section_map: HashMap<usize, HashSet<(usize, usize)>> = HashMap::new();
 
@@ -86,7 +89,7 @@ impl Board {
         let color_sections: Vec<ColorSection> = color_section_map
             .values()
             .map(|positions| ColorSection {
-                positions: positions.clone()
+                positions: positions.clone(),
             })
             .collect();
 
@@ -101,7 +104,9 @@ impl Board {
     }
 
     pub fn is_solved(&self) -> bool {
-        let colors_valid = self.state.star_counts
+        let colors_valid = self
+            .state
+            .star_counts
             .iter()
             .all(|(_, count)| *count == self.max_star_count);
 
@@ -109,8 +114,16 @@ impl Board {
             return false;
         }
 
-        !self.state.row_counts.iter().any(|x| *x != self.max_star_count)
-            && !self.state.col_counts.iter().any(|x| *x != self.max_star_count)
+        !self
+            .state
+            .row_counts
+            .iter()
+            .any(|x| *x != self.max_star_count)
+            && !self
+                .state
+                .col_counts
+                .iter()
+                .any(|x| *x != self.max_star_count)
     }
 
     pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
@@ -120,11 +133,17 @@ impl Board {
 
             // Row / Col counts are not correct
             if self.state.row_counts[y] + 1 > self.max_star_count {
-                return Err(format!("Too many stars in column { } (placing star at ({ }, { })", y, x, y));
+                return Err(format!(
+                    "Too many stars in column { } (placing star at ({ }, { })",
+                    y, x, y
+                ));
             }
 
             if self.state.col_counts[x] + 1 > self.max_star_count {
-                return Err(format!("Too many stars in row { } (placing star at ({ }, { })", x, x, y));
+                return Err(format!(
+                    "Too many stars in row { } (placing star at ({ }, { })",
+                    x, x, y
+                ));
             }
 
             let mut surrounding: Vec<(usize, usize)> = vec![];
@@ -143,8 +162,14 @@ impl Board {
             }
 
             if surrounding.iter().any(|pos| self.has_star(pos.0, pos.1)) {
-                let conflicting = surrounding.iter().find(|pos| self.has_star(pos.0, pos.1)).unwrap();
-                return Err(format!("Cannot place star next to another star. Placing: ({ }, { }) Existing: ({ }, { })", x, y, conflicting.0, conflicting.1));
+                let conflicting = surrounding
+                    .iter()
+                    .find(|pos| self.has_star(pos.0, pos.1))
+                    .unwrap();
+                return Err(format!(
+                    "Cannot place star next to another star. Placing: ({ }, { }) Existing: ({ }, { })",
+                    x, y, conflicting.0, conflicting.1
+                ));
             }
 
             self.state.place_star(x, y, self.max_star_count)?;
@@ -164,7 +189,7 @@ impl Board {
     /// Returns true if the dot was actually placed (not placed on a star or dot)
     pub fn place_dot(&mut self, x: usize, y: usize) -> bool {
         if self.in_range(x, y) && !self.has_star(x, y) {
-            return self.state.place_dot(x, y)
+            return self.state.place_dot(x, y);
         }
 
         false
@@ -181,7 +206,7 @@ impl Board {
     pub fn is_empty(&self, x: usize, y: usize) -> bool {
         !self.has_star(x, y) && !self.has_dot(x, y)
     }
-    
+
     pub fn create_color_map(&self) -> Vec<Vec<usize>> {
         let mut color_map = vec![vec!(0; self.size); self.size];
 
@@ -193,8 +218,20 @@ impl Board {
                     color_map[*y][*x] = i;
                 });
             });
-        
+
         color_map
+    }
+
+    pub fn has_contradictions(&self) -> bool {
+        // TODO: Need more things here?
+        self
+            .state
+            .current_color_sections
+            .iter()
+            .enumerate()
+            .any(|(i, section)| {
+                section.positions.len() < self.max_star_count - *self.state.star_counts.get(&i).unwrap_or(&0)
+            })
     }
 
     pub fn print(&self) {
@@ -214,6 +251,25 @@ impl Board {
         });
     }
 
+    pub fn to_string(&self) -> String {
+        let mut result = vec![vec!['0'; self.size]; self.size];
+
+        self.color_sections
+            .iter()
+            .enumerate()
+            .for_each(|(i, section)| {
+                section.positions.iter().for_each(|(x, y)| {
+                    result[*y][*x] = char::from_u32((i + 97) as u32).unwrap();
+                });
+            });
+
+        result
+            .iter()
+            .map(|row| row.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join("\n")
+    }
+
     fn in_range(&self, x: usize, y: usize) -> bool {
         x < self.size && y < self.size
     }
@@ -221,7 +277,7 @@ impl Board {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ColorSection {
-    pub positions: HashSet<(usize, usize)>
+    pub positions: HashSet<(usize, usize)>,
 }
 
 #[derive(Debug, Clone)]
@@ -231,19 +287,16 @@ pub struct State {
     pub row_counts: Vec<usize>,
     pub col_counts: Vec<usize>,
     pub current_color_sections: Vec<ColorSection>,
-    pub star_counts: HashMap<usize, usize> // Map of color section index to star count in that section
+    pub star_counts: HashMap<usize, usize>, // Map of color section index to star count in that section
 }
 
 impl PartialEq for State {
     fn eq(&self, other: &Self) -> bool {
-        self.star_placements == other.star_placements
-            && self.dot_placements == other.dot_placements
+        self.star_placements == other.star_placements && self.dot_placements == other.dot_placements
     }
 }
 
-impl Eq for State {
-
-}
+impl Eq for State {}
 
 impl Hash for State {
     // Gross but whatever
@@ -269,7 +322,7 @@ impl State {
             row_counts: vec![0; board_size],
             col_counts: vec![0; board_size],
             current_color_sections: initial_color_sections,
-            star_counts: HashMap::new()
+            star_counts: HashMap::new(),
         }
     }
 

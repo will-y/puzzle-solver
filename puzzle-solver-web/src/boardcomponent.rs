@@ -68,6 +68,7 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
                     />
                  </ul>
             </p>
+            <pre>{move || board.read().to_string()}</pre>
         </div>
     }
 }

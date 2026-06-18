@@ -66,6 +66,10 @@ impl DfsSolver {
                 return (visited.len(), true)
             }
 
+            if current_board.has_contradictions() {
+                continue;
+            }
+
             // Go through board until an empty spot is found
             for x in 0..current_board.size {
                 for y in 0..current_board.size {

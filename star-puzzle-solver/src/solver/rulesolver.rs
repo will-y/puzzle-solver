@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::solver::rules::fillarray::FillArrayRule;
 use crate::solver::rules::finishcolor::FinishColorRule;
 use crate::solver::rules::fullarray::FullArrayRule;
@@ -30,27 +31,29 @@ impl RuleSolver {
     /// Loops over all rules.
     ///
     /// Returns true if any rule provided any value.
-    fn loop_over_rules(&self, board: &mut Board, applied_rule: &mut Vec<AppliedRule>) -> bool {
+    fn loop_over_rules(&self, board: &mut Board, applied_rule: &mut Vec<AppliedRule>) -> Result<bool, String> {
         let mut changed = false;
-        self.rules.iter().for_each(|rule| {
-            if rule.apply(board) {
+        for rule in &self.rules {
+            if rule.apply(board)? {
                 changed = true;
                 applied_rule.push(AppliedRule {
                     name: rule.name(),
                     description: rule.short_description(),
                 });
             }
-        });
+        }
 
-        changed
+        Ok(changed)
     }
 
     /// Guesses a star.
     ///
     /// This will either solve the board, or place a dot if it reaches a contradiction.
-    fn guess_and_check(&self, board: &mut Board) {
+    /// TODO: This needs to use backtracking, probably a complete rewrite
+    fn guess_and_check(&self, board: &mut Board, already_checked: HashSet<(usize, usize)>) -> Option<()> {
+        let mut already_checked = already_checked;
         // Find star
-        let star_point = self.find_star_to_guess(board);
+        let star_point = self.find_star_to_guess(board, &already_checked)?;
 
         // Copy board
         let mut board_copy = board.clone();
@@ -59,53 +62,57 @@ impl RuleSolver {
             Ok(_) => {}
             Err(_) => {
                 board.place_dot(star_point.0, star_point.1);
-                return;
+                return Some(());
             }
         }
         // Check for contradictions
-        if self.board_has_contradictions(&board_copy) {
+        if board_copy.has_contradictions() {
             board.place_dot(star_point.0, star_point.1);
-            return;
+            return Some(());
         }
         // Run rules until done or contradiction
-        while self.loop_over_rules(&mut board_copy, &mut vec![]) {
-            if self.board_has_contradictions(&board_copy) {
+        let mut cont = true;
+        while cont {
+            match self.loop_over_rules(&mut board_copy, &mut vec![]) {
+                Ok(changed) => cont = changed,
+                Err(_) => {
+                    board.place_dot(star_point.0, star_point.1);
+                    return Some(());
+                }
+            }
+            if board_copy.has_contradictions() {
                 board.place_dot(star_point.0, star_point.1);
-                return;
+                return Some(());
             }
         }
 
-        // TODO: Here it is either solved or retry recursively?
-        // Keep a list of stars and dots? Then apply them all if solved?
-        println!("If we get here things are going to break");
+        if board_copy.is_solved() {
+            board_copy.state.star_placements.iter().for_each(|(x, y)| {
+                // Don't care if it fails, just making the actual board look like this one
+                let _ = board.place_star(*x, *y);
+            });
+
+            return Some(());
+        }
+
+        already_checked.insert(star_point);
+        self.guess_and_check(board, already_checked)
     }
 
     /// Finds the next star to guess.
     ///
     /// For now this just picks the next star in order.
     /// In the future I want this to be smarter (guessing places that would be helpful to have a star or dot).
-    fn find_star_to_guess(&self, board: &Board) -> (usize, usize) {
+    fn find_star_to_guess(&self, board: &Board, exclude: &HashSet<(usize, usize)>) -> Option<(usize, usize)> {
         for x in 0..board.size {
             for y in 0..board.size {
-                if board.is_empty(x, y) {
-                    return (x, y);
+                if board.is_empty(x, y) && !exclude.contains(&(x, y)) {
+                    return Some((x, y));
                 }
             }
         }
 
-        panic!("No star to guess found, board should be solved at this point")
-    }
-
-    fn board_has_contradictions(&self, board: &Board) -> bool {
-        // TODO: Need more things here?
-        board
-            .state
-            .current_color_sections
-            .iter()
-            .enumerate()
-            .any(|(i, section)| {
-                section.positions.len() < board.max_star_count - *board.state.star_counts.get(&i).unwrap_or(&0)
-            })
+        None
     }
 }
 
@@ -119,8 +126,8 @@ impl Solver for RuleSolver {
             println!("After Rule Iterations: ");
             board.print();
 
-            if !rule_changed {
-                self.guess_and_check(board);
+            if !rule_changed.unwrap_or(false) {
+                self.guess_and_check(board, HashSet::new()).expect("Guess and Check Failed");
                 applied_rules.push(AppliedRule {
                     name: "Guess and Check".to_string(),
                     description: "Guess a star and check if it leads to a contradiction".to_string(),
@@ -173,7 +180,23 @@ mod tests {
 
     #[test]
     fn it_solves_board() {
-        let mut board = Board::from_string("0111222222\n0333332222\n0300332422\n0005552422\n0000000422\n0000222222\n0000067772\n0088862222\n6666669992\n6666666222", 2).unwrap();
+        let mut board = Board::from_string("cccccgiggg\ncacccgigeg\ncaaacgigeg\nccdaggggeg\ndddagggggg\ngggaggghgg\nggggggghhh\nbbbggggggg\ngggggggfff\ngjjjgggggg", 2).unwrap();
+
+        println!("Attempting to solve board");
+        board.print();
+
+        let solver = RuleSolver::default();
+
+        let result = solver.solve(&mut board);
+
+        result.print_results();
+
+        assert!(board.is_solved());
+    }
+
+    #[test]
+    fn it_solves_harder_board() {
+        let mut board = Board::from_string("ghhbbdeeee\ngghbbdeeee\ngghbbddeee\nggbbcaaaee\niggbcafaaa\niggbcafffa\niigbbaaaff\ngggbbbbbbf\ngggbbbbbbf\ngggjjjjjbb", 2).unwrap();
 
         println!("Attempting to solve board");
         board.print();
