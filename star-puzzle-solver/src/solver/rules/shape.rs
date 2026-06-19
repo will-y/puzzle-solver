@@ -20,6 +20,7 @@ impl ShapeRule {
                 (Shape::from_positions(HashSet::from([(0, 0), (0, 1), (0, 2)]), 2), ShapeResult::stars(vec![(0, 0), (0, 2)])), // 1x3 2 star
                 (Shape::from_positions(HashSet::from([(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]), 2), ShapeResult::dots(vec![(-1, 1), (1, 1), (-1, 3), (1, 3)])), // 1x5 2 star
                 (Shape::from_positions(HashSet::from([(0, 0), (0, 1)]), 1), ShapeResult::dots(vec![(-1, 0), (1, 0), (-1, 1), (1, 1)])), // 1x2 1 star
+                (Shape::from_positions(HashSet::from([(0, 0), (0, 1), (0, 2), (0, 3)]), 2), ShapeResult::dots(vec![(-1, 0), (-1, 1), (-1, 2), (-1, 3), (1, 0), (1, 1), (1, 2), (1, 3)])), // 1x4 2 star
             ]))
         }
     }
