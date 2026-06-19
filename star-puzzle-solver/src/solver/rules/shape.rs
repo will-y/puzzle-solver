@@ -18,6 +18,8 @@ impl ShapeRule {
             shapes: Self::rotate_shapes(HashMap::from([
                 (Shape::from_positions(HashSet::from([(0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2), (1, 3)]), 2), ShapeResult::dots(vec![(0, 0)])), // 2x2 base with 2x2 L on top
                 (Shape::from_positions(HashSet::from([(0, 0), (0, 1), (0, 2)]), 2), ShapeResult::stars(vec![(0, 0), (0, 2)])), // 1x3 2 star
+                (Shape::from_positions(HashSet::from([(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]), 2), ShapeResult::dots(vec![(-1, 1), (1, 1), (-1, 3), (1, 3)])), // 1x5 2 star
+                (Shape::from_positions(HashSet::from([(0, 0), (0, 1)]), 1), ShapeResult::dots(vec![(-1, 0), (1, 0), (-1, 1), (1, 1)])), // 1x2 1 star
             ]))
         }
     }
@@ -288,5 +290,53 @@ mod tests {
         let second_result = rule.apply(&mut board);
 
         assert!(!second_result.unwrap());
+    }
+
+    #[test]
+    fn negative_dot_offsets_work() {
+        let mut board = Board::from_string("0000000000\n0001111100\n0000000000\n0000000000\n0000000000\n0000000000\n0000000000\n0000000000\n0000000000\n0000000000", 2).unwrap();
+
+        println!("Board to solve:");
+        board.print();
+
+        let rule = ShapeRule::new();
+
+        let result = rule.apply(&mut board);
+
+        println!("Solved Board:");
+        board.print();
+
+        assert!(result.unwrap());
+        assert!(board.has_dot(4, 0));
+        assert!(board.has_dot(6, 0));
+        assert!(board.has_dot(4, 2));
+        assert!(board.has_dot(6, 2));
+    }
+
+    #[test]
+    fn one_by_two_grid_works() {
+        let mut board = Board::from_string("1100000000\n0000000000\n0002200000\n0000000000\n0000000000\n0000000000\n0000000000\n0033330000\n0000000000\n0000000000", 2).unwrap();
+        board.place_star(2, 7).unwrap();
+        println!("Board to solve:");
+        board.print();
+
+        let rule = ShapeRule::new();
+
+        let result = rule.apply(&mut board);
+
+        println!("Solved Board:");
+        board.print();
+
+        assert!(result.unwrap());
+        assert!(board.has_dot(0, 1));
+        assert!(board.has_dot(1, 1));
+        assert!(board.has_dot(3, 1));
+        assert!(board.has_dot(4, 1));
+        assert!(board.has_dot(3, 3));
+        assert!(board.has_dot(4, 3));
+        assert!(board.has_dot(4, 6));
+        assert!(board.has_dot(5, 6));
+        assert!(board.has_dot(4, 8));
+        assert!(board.has_dot(5, 8));
     }
 }
