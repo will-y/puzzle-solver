@@ -4,8 +4,10 @@ use leptos::html::Canvas;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 use web_sys::js_sys::Math::{cos, sin};
+use web_sys::MouseEvent;
 use star_puzzle::board::Board;
 use star_puzzle_solver::solver::rulesolver::{AppliedRule, RuleSolver};
+use web_sys::console;
 
 const COLORS: [&str; 15] = [
     "#FF5733", // Vibrant Red-Orange
@@ -51,7 +53,7 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
     view! {
         <div>
             <p>{board_size}</p>
-            <canvas width=move || {board_size() * SQUARE_SIZE} height=move || {board_size() * SQUARE_SIZE} node_ref=canvas_ref></canvas>
+            <canvas width=move || {board_size() * SQUARE_SIZE} height=move || {board_size() * SQUARE_SIZE} node_ref=canvas_ref on:click=move |event| on_board_clicked(event, board)></canvas>
             <button on:click=move |_| solve_board(board, set_solver_result)>
                 "Solve"
             </button>
@@ -79,6 +81,25 @@ fn solve_board(board: RwSignal<Board>, set_solver_result: WriteSignal<Vec<String
         let solver_result = solver.solve(board);
         set_solver_result.set(solver_result.format_results().split('\n').map(|s| StringListEntry::new(s.to_string())).collect());
     });
+}
+
+fn on_board_clicked(event: MouseEvent, board: RwSignal<Board>) {
+    let board_x = (event.offset_x() as f32 / SQUARE_SIZE as f32).floor() as usize;
+    let board_y = (event.offset_y() as f32 / SQUARE_SIZE as f32).floor() as usize;
+
+    if event.shift_key() {
+        board.update(|board| {
+            board.place_star(board_x, board_y).expect("Failed to place star");
+        });
+    } else {
+        board.update(|board| {
+            board.place_dot(board_x, board_y);
+        });
+    }
+
+    if board.read().is_solved() {
+        console::log_1(&"Board is solved!".into());
+    }
 }
 
 fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d) {
