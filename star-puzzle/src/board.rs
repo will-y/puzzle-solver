@@ -128,9 +128,13 @@ impl Board {
 
     pub fn place_star(&mut self, x: usize, y: usize) -> Result<(), String> {
         // TODO: Consider moving more of this to state
+        if self.has_dot(x, y) {
+            return Err(format!(
+                "Cannot place a dot on top of a star (placing star at ({ }, { })",
+                x, y
+            ));
+        }
         if self.in_range(x, y) {
-            self.state.star_placements.insert((x, y));
-
             // Row / Col counts are not correct
             if self.state.row_counts[y] + 1 > self.max_star_count {
                 return Err(format!(
@@ -172,6 +176,7 @@ impl Board {
                 ));
             }
 
+            self.state.star_placements.insert((x, y));
             self.state.place_star(x, y, self.max_star_count)?;
 
             surrounding.iter().for_each(|(x, y)| {

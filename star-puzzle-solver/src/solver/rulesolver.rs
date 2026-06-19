@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn it_solves_board() {
-        let mut board = Board::from_string("cccccgiggg\ncacccgigeg\ncaaacgigeg\nccdaggggeg\ndddagggggg\ngggaggghgg\nggggggghhh\nbbbggggggg\ngggggggfff\ngjjjgggggg", 2).unwrap();
+        let mut board = Board::from_string("fhhhhhhbbb\nfjjjjjhbcb\nfjihhhhbcc\nfiiiiiabbc\nfdiiaaabbb\nfdiiiiiebb\nfddiibiebb\nfiiiibbebg\niiiiiibbbg\niiiiiigggg", 2).unwrap();
 
         println!("Attempting to solve board");
         board.print();
@@ -198,6 +198,22 @@ mod tests {
 
     #[test]
     fn it_solves_harder_board() {
+        let mut board = Board::from_string("ccccchhhcc\ncdcjcccccc\nddcjcfffcc\ndccjcccccc\ndcccccbccc\nccicccbbcc\necicaccbbc\neeicacccbb\neeccacgggb\neeccccccgb", 2).unwrap();
+
+        println!("Attempting to solve board");
+        board.print();
+
+        let solver = RuleSolver::default();
+
+        let result = solver.solve(&mut board);
+
+        result.print_results();
+
+        assert!(board.is_solved());
+    }
+
+    #[test]
+    fn it_solves_hardest_board() {
         let mut board = Board::from_string("aaccchhhhg\naaachhhggg\naaacdhgggg\naaacddiggg\naaccdiieee\nfcccdiieee\nffccdiieje\nfbbbbeeejj\nffbbeeejjj\nffbbbeejjj", 2).unwrap();
 
         println!("Attempting to solve board");

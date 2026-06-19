@@ -39,14 +39,15 @@ impl ShapeRule {
             result.insert(rot_3.0, out_rot_3);
 
             let shape = shape.flip();
-            let rot_1 = shape.rotate();
+            let shape_result = shape_result.flip(shape.1);
+            let rot_1 = shape.0.rotate();
             let out_rot_1 = shape_result.rotate(rot_1.1);
             let rot_2 = rot_1.0.rotate();
             let out_rot_2 = out_rot_1.rotate(rot_2.1);
             let rot_3 = rot_2.0.rotate();
             let out_rot_3 = out_rot_2.rotate(rot_3.1);
 
-            result.insert(shape, shape_result);
+            result.insert(shape.0, shape_result);
             result.insert(rot_1.0, out_rot_1);
             result.insert(rot_2.0, out_rot_2);
             result.insert(rot_3.0, out_rot_3);
@@ -144,11 +145,11 @@ impl Shape {
     }
 
     /// Flips the shape
-    pub fn flip(&self) -> Self {
+    pub fn flip(&self) -> (Self, usize) {
         let max_y = self.positions.iter().map(|(_, y)| *y).max().unwrap();
         let new_positions = self.positions.iter().map(|(x, y)| (*x, max_y - *y)).collect();
 
-        Shape::new(new_positions, self.offset, self.required_star_count)
+        (Shape::new(new_positions, self.offset, self.required_star_count), max_y)
     }
 }
 
