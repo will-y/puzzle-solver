@@ -1,7 +1,7 @@
-pub mod linerule2star;
 pub mod fullarray;
 pub mod fillarray;
 pub mod finishcolor;
+pub mod shape;
 
 use star_puzzle::board::Board;
 

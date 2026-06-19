@@ -2,10 +2,10 @@ use std::collections::HashSet;
 use crate::solver::rules::fillarray::FillArrayRule;
 use crate::solver::rules::finishcolor::FinishColorRule;
 use crate::solver::rules::fullarray::FullArrayRule;
-use crate::solver::rules::linerule2star::LineRule2Star;
 use crate::solver::rules::Rule;
 use crate::solver::{Solver, SolverResult};
 use star_puzzle::board::Board;
+use crate::solver::rules::shape::ShapeRule;
 
 /// The goal of this solver is to use rules to solve it
 /// like a human would. The file needs to include a bunch of different rules
@@ -21,7 +21,7 @@ impl RuleSolver {
 
     pub fn default() -> Self {
         Self::new(vec![
-            Box::new(LineRule2Star {}),
+            Box::new(ShapeRule::new()),
             Box::new(FillArrayRule {}),
             Box::new(FullArrayRule {}),
             Box::new(FinishColorRule {})
@@ -49,7 +49,7 @@ impl RuleSolver {
     /// Guesses a star.
     ///
     /// This will either solve the board, or place a dot if it reaches a contradiction.
-    /// TODO: This needs to use backtracking, probably a complete rewrite
+    /// TODO: Maybe good enough to check 1 more layer? Would be nice to figure out a way to do n-deep guess and checks
     fn guess_and_check(&self, board: &mut Board, already_checked: HashSet<(usize, usize)>) -> Option<()> {
         let mut already_checked = already_checked;
         // Find star
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn it_solves_harder_board() {
-        let mut board = Board::from_string("ghhbbdeeee\ngghbbdeeee\ngghbbddeee\nggbbcaaaee\niggbcafaaa\niggbcafffa\niigbbaaaff\ngggbbbbbbf\ngggbbbbbbf\ngggjjjjjbb", 2).unwrap();
+        let mut board = Board::from_string("aaccchhhhg\naaachhhggg\naaacdhgggg\naaacddiggg\naaccdiieee\nfcccdiieee\nffccdiieje\nfbbbbeeejj\nffbbeeejjj\nffbbbeejjj", 2).unwrap();
 
         println!("Attempting to solve board");
         board.print();

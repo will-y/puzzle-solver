@@ -270,7 +270,7 @@ impl Board {
             .join("\n")
     }
 
-    fn in_range(&self, x: usize, y: usize) -> bool {
+    pub fn in_range(&self, x: usize, y: usize) -> bool {
         x < self.size && y < self.size
     }
 }
