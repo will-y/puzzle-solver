@@ -2,12 +2,10 @@ pub mod fullarray;
 pub mod fillarray;
 pub mod finishcolor;
 pub mod shape;
+pub mod colorarray;
 
 use star_puzzle::board::Board;
-// TODO: Rules to add:
-// 1. If a row is entirely in one color, fill the rest of the color in with dots
-// 2. If a color is entirely in one row, fill the rest of the row in with dots
-// 3. MAKE GUESS AND CHECK DO 2 ITERATIONS DEEP, THEN MAYBE EXPLORE DOING N-LAYERS
+
 pub trait Rule {
     /// Applies the given rule to the board.
     /// It returns true if the rule made some change, false otherwise.

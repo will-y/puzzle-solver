@@ -4,10 +4,6 @@ use star_puzzle::board::{Board, ColorSection};
 use crate::solver::rules::Rule;
 
 // TODO: Don't use a hashmap, use a single struct or a 3rd parent struct so the rotation code doesn't have to be duplicated
-// TODO List:
-// 1. Allow negative numbers in the dot + star lists
-// 2. Rotations and flips
-// 3. Add shapes
 pub struct ShapeRule {
     shapes: HashMap<Shape, ShapeResult>
 }
@@ -134,7 +130,7 @@ impl Shape {
     }
 
     pub fn matches(&self, other: &Shape) -> bool {
-        self.positions == other.positions
+        self.positions == other.positions && self.required_star_count == other.required_star_count
     }
 
     /// Rotates the shape by 90 degrees.

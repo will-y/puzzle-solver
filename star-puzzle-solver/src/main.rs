@@ -14,7 +14,7 @@ fn main() {
         Box::new(solver::rulesolver::RuleSolver::default())
     ];
 
-    // run_solvers(board, &solvers);
+    run_solvers(board, &solvers);
     run_solvers(board_2, &solvers);
 }
 

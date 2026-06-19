@@ -5,6 +5,7 @@ use crate::solver::rules::fullarray::FullArrayRule;
 use crate::solver::rules::Rule;
 use crate::solver::{Solver, SolverResult};
 use star_puzzle::board::Board;
+use crate::solver::rules::colorarray::ColorArrayRule;
 use crate::solver::rules::shape::ShapeRule;
 
 /// The goal of this solver is to use rules to solve it
@@ -24,7 +25,8 @@ impl RuleSolver {
             Box::new(ShapeRule::new()),
             Box::new(FillArrayRule {}),
             Box::new(FullArrayRule {}),
-            Box::new(FinishColorRule {})
+            Box::new(FinishColorRule {}),
+            Box::new(ColorArrayRule {})
         ])
     }
 
