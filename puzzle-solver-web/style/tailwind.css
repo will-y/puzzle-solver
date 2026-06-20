@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Explicitly tell Tailwind to scan your Rust source files for classes */
+@source "../src/**/*.rs";
+
+/* Optional: Configure default themes directly in your CSS */
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark;
+}
+
+.menu {
+    --menu-active-fg: var(--color-primary-content);
+    --menu-active-bg: var(--color-primary);
+}

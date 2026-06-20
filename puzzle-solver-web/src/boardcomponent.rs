@@ -6,7 +6,7 @@ use leptos::wasm_bindgen::JsCast;
 use web_sys::js_sys::Math::{cos, sin};
 use web_sys::MouseEvent;
 use star_puzzle::board::Board;
-use star_puzzle_solver::solver::rulesolver::{AppliedRule, RuleSolver};
+use star_puzzle_solver::solver::rulesolver::{RuleSolver};
 use web_sys::console;
 
 const COLORS: [&str; 15] = [
@@ -30,7 +30,10 @@ const COLORS: [&str; 15] = [
 const SQUARE_SIZE: usize = 30;
 
 #[component]
-pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
+pub fn BoardComponent(
+    board: RwSignal<Board>,
+    #[prop(default = false)]
+    manual: bool) -> impl IntoView {
     let board_size = move || board.read().size;
     let canvas_ref = NodeRef::<Canvas>::new();
 
@@ -50,13 +53,23 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
         }
     });
 
+    // TODO: Size the board better
     view! {
-        <div>
-            <p>{board_size}</p>
-            <canvas width=move || {board_size() * SQUARE_SIZE} height=move || {board_size() * SQUARE_SIZE} node_ref=canvas_ref on:click=move |event| on_board_clicked(event, board)></canvas>
-            <button on:click=move |_| solve_board(board, set_solver_result)>
-                "Solve"
-            </button>
+        <div class="flex flex-col justify-center align-center gap-8">
+            <div class="flex justify-center align-center">
+                <canvas class="grow-0" width=move || {board_size() * SQUARE_SIZE} height=move || {board_size() * SQUARE_SIZE} node_ref=canvas_ref on:click=move |event| on_board_clicked(event, board)></canvas>
+            </div>
+            <Show when=move || manual>
+                <div class="flex justify-center align-center gap-4">
+                    <button class="btn btn-warning">Clear</button>
+                    <button class="btn btn-success">Check</button>
+                </div>
+            </Show>
+            <Show when=move || !manual>
+                <button on:click=move |_| solve_board(board, set_solver_result)>
+                    "Solve"
+                </button>
+            </Show>
             <p>
                 <ul>
                     <For
@@ -70,7 +83,7 @@ pub fn BoardComponent(board: RwSignal<Board>) -> impl IntoView {
                     />
                  </ul>
             </p>
-            <pre>{move || board.read().to_string()}</pre>
+            // <pre>{move || board.read().to_string()}</pre>
         </div>
     }
 }
