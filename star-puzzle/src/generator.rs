@@ -27,7 +27,7 @@ pub fn generate_board(max_star_count: usize, difficulty: f32) -> Result<Board, S
         println!("{:?}", star_placements);
         // 2. Seed color sections
         let mut color_map = vec![vec![0; board_size]; board_size];
-        let star_groups = seed_color_map(&mut color_map, star_placements, max_star_count);
+        let star_groups = seed_color_map(&mut color_map, &star_placements, max_star_count);
         println!("{:?}", color_map);
         // 3. Connect color sections
         match connect_color_map(&mut color_map, &star_groups) {
@@ -42,7 +42,8 @@ pub fn generate_board(max_star_count: usize, difficulty: f32) -> Result<Board, S
         board.print();
         // 4. Flood fill color sections
         flood_fill_color_map(&mut color_map, board_size, difficulty);
-        let board = Board::from_color_map(&color_map, max_star_count)?;
+        let mut board = Board::from_color_map(&color_map, max_star_count)?;
+        board.set_solution(star_placements);
         println!("Board After Flood Fill:");
         board.print();
         return Ok(board)
@@ -161,7 +162,7 @@ fn all_random_indices_from(
 
 fn seed_color_map(
     color_map: &mut Vec<Vec<usize>>,
-    stars: HashSet<(usize, usize)>,
+    stars: &HashSet<(usize, usize)>,
     max_star_count: usize,
 ) -> Vec<Vec<(usize, usize)>> {
     let mut star_copy = stars.iter().collect::<Vec<_>>();

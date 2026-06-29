@@ -1,6 +1,7 @@
 use colored::{Color, Colorize};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
+use std::ops::Sub;
 
 const COLORS: [Color; 11] = [
     Color::Red,
@@ -22,6 +23,7 @@ pub struct Board {
     pub max_star_count: usize,
     pub size: usize,
     pub state: State,
+    pub solution: Option<HashSet<(usize, usize)>>
 }
 
 impl Board {
@@ -66,6 +68,7 @@ impl Board {
             max_star_count,
             state: State::new(board_size, initial_color_sections),
             size: board_size,
+            solution: None
         })
     }
 
@@ -100,6 +103,7 @@ impl Board {
             max_star_count,
             state: State::new(board_size, initial_color_sections),
             size: board_size,
+            solution: None
         })
     }
 
@@ -277,6 +281,33 @@ impl Board {
 
     pub fn in_range(&self, x: usize, y: usize) -> bool {
         x < self.size && y < self.size
+    }
+
+    /// Sets the board solution.
+    /// Called by board generators so that the Check function can work.
+    pub fn set_solution(&mut self, solution: HashSet<(usize, usize)>) {
+        self.solution = Some(solution)
+    }
+
+    /// Checks to see if the current positions are correct.
+    ///
+    /// Returns an error result if no solution was loaded into this board.
+    ///
+    /// If successful, returns the set of incorrect star positions
+    pub fn check_board(&self) -> Result<HashSet<(usize, usize)>, String> {
+        match &self.solution {
+            None => {
+                Err("No solution was added to this board".to_string())
+            }
+            Some(sol) => {
+                Ok(self.state.star_placements.sub(sol))
+            }
+        }
+    }
+
+    /// Clears the board
+    pub fn clear(&mut self) {
+        self.state = State::new(self.size, self.color_sections.clone())
     }
 }
 

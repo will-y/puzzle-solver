@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::f64::consts::PI;
 use star_puzzle_solver::solver::Solver;
 use leptos::html::Canvas;
@@ -39,6 +40,7 @@ pub fn BoardComponent(
 
     // TODO: This is not great, just use a <pre> with what I was doing before?
     let (solver_results, set_solver_result) = signal(vec![]);
+    let (errors, set_errors) = signal(HashSet::<(usize, usize)>::new());
 
     Effect::new(move |_| {
         if let Some(node) = canvas_ref.get() {
@@ -49,7 +51,7 @@ pub fn BoardComponent(
                 .dyn_into::<web_sys::CanvasRenderingContext2d>()
                 .unwrap();
 
-            draw_board(&board.read(), &context);
+            draw_board(&board.read(), &context, &errors);
         }
     });
 
@@ -61,8 +63,8 @@ pub fn BoardComponent(
             </div>
             <Show when=move || manual>
                 <div class="flex justify-center align-center gap-4">
-                    <button class="btn btn-warning">Clear</button>
-                    <button class="btn btn-success">Check</button>
+                    <button class="btn btn-warning" on:click=move |_| clear(board, set_errors)>Clear</button>
+                    <button class="btn btn-success" on:click=move |_| check(board, set_errors)>Check</button>
                 </div>
             </Show>
             <Show when=move || !manual>
@@ -86,6 +88,19 @@ pub fn BoardComponent(
             // <pre>{move || board.read().to_string()}</pre>
         </div>
     }
+}
+
+fn clear(board: RwSignal<Board>, set_errors: WriteSignal<HashSet<(usize, usize)>>) {
+    board.update(|board| {
+        board.clear();
+    });
+
+    set_errors.set(HashSet::new());
+}
+
+fn check(board: RwSignal<Board>, set_errors: WriteSignal<HashSet<(usize, usize)>>) {
+    let errors = board.read().check_board().expect("Can't check board");
+    set_errors.set(errors);
 }
 
 fn solve_board(board: RwSignal<Board>, set_solver_result: WriteSignal<Vec<StringListEntry>>) {
@@ -115,8 +130,9 @@ fn on_board_clicked(event: MouseEvent, board: RwSignal<Board>) {
     }
 }
 
-fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d) {
+fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d, errors: &ReadSignal<HashSet<(usize, usize)>>) {
     let color_map = board.create_color_map();
+    let errors = errors.read();
 
     context.set_stroke_style_str("#000000");
     for x in 0..board.size {
@@ -128,7 +144,7 @@ fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d) {
             context.stroke();
 
             if board.has_star(x, y) {
-                draw_star(context, x * SQUARE_SIZE + SQUARE_SIZE / 2, y * SQUARE_SIZE + SQUARE_SIZE / 2);
+                draw_star(context, x * SQUARE_SIZE + SQUARE_SIZE / 2, y * SQUARE_SIZE + SQUARE_SIZE / 2, !errors.is_empty() && errors.contains(&(x, y)));
             } else if board.has_dot(x, y) {
                 draw_dot(context, x * SQUARE_SIZE + SQUARE_SIZE / 2, y * SQUARE_SIZE + SQUARE_SIZE / 2);
             }
@@ -136,7 +152,7 @@ fn draw_board(board: &Board, context: &web_sys::CanvasRenderingContext2d) {
     }
 }
 
-fn draw_star(context: &web_sys::CanvasRenderingContext2d, x: usize, y: usize) {
+fn draw_star(context: &web_sys::CanvasRenderingContext2d, x: usize, y: usize, error: bool) {
     let mut rot = PI / 2.0 * 3.0;
     let step = PI / 5.0;
     let outer_radius = SQUARE_SIZE as f64 / 3.0;
@@ -163,7 +179,7 @@ fn draw_star(context: &web_sys::CanvasRenderingContext2d, x: usize, y: usize) {
     context.line_to(x as f64, y as f64 - outer_radius);
     context.close_path();
     context.stroke();
-    context.set_fill_style_str("#000000");
+    context.set_fill_style_str(if error { "#FF0000" } else { "#000000" });
     context.fill();
 }
 
