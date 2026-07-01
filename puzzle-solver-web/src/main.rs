@@ -3,6 +3,7 @@ mod playpage;
 mod solvepage;
 mod statspage;
 mod navbar;
+mod newboard;
 
 use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
