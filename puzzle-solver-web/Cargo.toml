@@ -11,6 +11,7 @@ leptos = { version = "0.8.19", features = ["csr"] }
 uuid = { version = "1.23.3", features = ["v4", "js"] }
 getrandom = { version = "0.2", features = ["js"] }
 leptos_router = "0.8.13"
+leptos-use = { version = "0.19.0", default-features = false, features = ["use_interval"] }
 
 [dependencies.web-sys]
 version = "0.3"

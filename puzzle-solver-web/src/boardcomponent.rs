@@ -34,7 +34,9 @@ const SQUARE_SIZE: usize = 30;
 pub fn BoardComponent(
     board: RwSignal<Board>,
     #[prop(default = false)]
-    manual: bool) -> impl IntoView {
+    manual: bool,
+    #[prop(optional)]
+    reset_timer: Option<Callback<()>>) -> impl IntoView {
     let board_size = move || board.read().size;
     let canvas_ref = NodeRef::<Canvas>::new();
 
@@ -63,7 +65,7 @@ pub fn BoardComponent(
             </div>
             <Show when=move || manual>
                 <div class="flex justify-center align-center gap-4">
-                    <button class="btn btn-warning" on:click=move |_| clear(board, set_errors)>Clear</button>
+                    <button class="btn btn-warning" on:click=move |_| clear(board, set_errors, reset_timer)>Clear</button>
                     <button class="btn btn-success" on:click=move |_| check(board, set_errors)>Check</button>
                 </div>
             </Show>
@@ -90,10 +92,14 @@ pub fn BoardComponent(
     }
 }
 
-fn clear(board: RwSignal<Board>, set_errors: WriteSignal<HashSet<(usize, usize)>>) {
+fn clear(board: RwSignal<Board>, set_errors: WriteSignal<HashSet<(usize, usize)>>, reset_timer: Option<Callback<()>>) {
     board.update(|board| {
         board.clear();
     });
+
+    if let Some(r) = reset_timer {
+        r.run(());
+    }
 
     set_errors.set(HashSet::new());
 }

@@ -1,14 +1,30 @@
 use leptos::prelude::*;
 
 // TODO: Let components add things here through props
+// TODO: This flex stuff isn't going to work, maybe look at doing a grid of size 3?
 #[component]
-pub fn NavBar() -> impl IntoView {
+pub fn NavBar(
+    #[prop(into, default = view!{<div></div>}.into_any())]
+    center: AnyView,
+    #[prop(into, default = view!{<div></div>}.into_any())]
+    right: AnyView
+) -> impl IntoView {
+    let center_view = center;
+    let right_view = right;
     view! {
-        <nav class="navbar w-full bg-base-300">
-            <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor" class="my-1.5 inline-block size-4"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M9 4v16"></path><path d="M14 10l2 2l-2 2"></path></svg>
-            </label>
-            <div class="px-4">Star Puzzle</div>
+        <nav class="navbar w-full bg-base-300 grid grid-cols-3 gap-4">
+            <div class="flex items-center">
+                <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor" class="my-1.5 inline-block size-4"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M9 4v16"></path><path d="M14 10l2 2l-2 2"></path></svg>
+                </label>
+                <div class="px-4">Star Puzzle</div>
+            </div>
+            <div class="flex items-center justify-center">
+                {{center_view}}
+            </div>
+            <div class="flex items-center justify-end">
+                {{right_view}}
+            </div>
         </nav>
     }
 }
